@@ -18,6 +18,14 @@ A beautiful terminal-based Docker container monitoring tool built with Go and bu
 
 ## Installation
 
+### Using `go install`
+
+```bash
+go install github.com/zsuroy/dockerview-go/cmd/dockerview@latest
+```
+
+Make sure `$GOPATH/bin` (or `$HOME/go/bin`) is in your `PATH`.
+
 ### From Source
 
 ```bash
