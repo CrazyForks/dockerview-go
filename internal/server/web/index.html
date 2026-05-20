@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DockerView Go | Dashboard Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030303;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.4);
+            --card-bg: rgba(14, 14, 18, 0.6);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.45);
+            --danger: #ff0055;
+            --success: #00ffaa;
+            --warning: #ffaa00;
+            --ram-color: #d500f9;
+            --ram-glow: rgba(213, 0, 249, 0.4);
+            --panel-blur: blur(24px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Abstract noise overlay */
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.02; pointer-events: none; z-index: 1000;
+        }
+
+        .mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(213, 0, 249, 0.05) 0%, transparent 40%);
+        }
+
+        .container { max-width: 1600px; margin: 0 auto; padding: 50px 30px; }
+
+        /* Floating Controller Panel */
+        .controls-panel {
+            position: sticky; top: 25px; z-index: 100;
+            background: rgba(18, 18, 22, 0.4);
+            border: 1px solid var(--card-border);
+            padding: 14px 28px;
+            border-radius: 20px;
+            backdrop-filter: var(--panel-blur);
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 50px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 20px;
+        }
+
+        @keyframes slideDown { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .brand-sec { display: flex; align-items: center; gap: 12px; }
+        .brand-text { display: flex; flex-direction: column; gap: 2px; }
+        .brand-text h1 {
+            font-size: 14px; font-weight: 900; letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin: 0; line-height: 1.1; display: flex; align-items: center;
+        }
+        .brand-text h1 .accent-text {
+            font-weight: 700; font-size: 9px; border: 1px solid var(--accent);
+            padding: 1px 4px; border-radius: 4px; margin-left: 6px; letter-spacing: 0;
+            color: var(--accent); -webkit-text-fill-color: var(--accent);
+        }
+        .live-indicator { display: flex; align-items: center; gap: 5px; font-size: 8px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.5px; }
+        .pulse-dot {
+            width: 5px; height: 5px; background: var(--success); border-radius: 50%;
+            box-shadow: 0 0 8px var(--success); animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px var(--success); }
+            100% { transform: scale(0.95); opacity: 0.6; }
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .tab-btn {
+            background: none; border: none; color: var(--text-dim); padding: 6px 14px;
+            font-size: 11px; font-weight: 700; border-radius: 8px; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; gap: 6px;
+        }
+        .tab-btn:hover { color: white; }
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.08); color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .tab-badge {
+            font-size: 9px; background: rgba(255, 255, 255, 0.08); color: var(--text-dim);
+            padding: 1px 5px; border-radius: 5px; font-weight: 800;
+        }
+        .tab-btn.active .tab-badge { background: var(--accent); color: black; }
+
+        .search-wrap { position: relative; width: 320px; }
+        .search-input {
+            width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid transparent;
+            border-radius: 10px; padding: 8px 16px 8px 36px; color: white; font-size: 13px;
+            transition: all 0.3s;
+        }
+        .search-input:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.08); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.15); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+        .sort-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dim); }
+        .sort-btn {
+            background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px 8px;
+            border-radius: 6px; transition: 0.2s; font-size: 11px; font-weight: 700;
+        }
+        .sort-btn.active { color: white; background: rgba(255,255,255,0.08); }
+
+        /* Search highlighting */
+        mark.highlight {
+            background: rgba(0, 242, 255, 0.25);
+            color: var(--accent);
+            border-radius: 2px;
+            padding: 0 2px;
+            text-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* Summary Dashboard */
+        .summary-dashboard {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px;
+        }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            padding: 20px; border-radius: 20px; text-align: center;
+            backdrop-filter: blur(10px); transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+        .stat-value { font-size: 28px; font-weight: 800; }
+
+        /* Grouping Sections */
+        .section-title {
+            font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--text-dim); margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+        }
+        .section-title::after { content: ""; flex-grow: 1; height: 1px; background: rgba(255,255,255,0.04); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; margin-bottom: 50px; }
+
+        /* Advanced Card */
+        .card-wrapper { perspective: 1500px; }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 24px; padding: 28px; backdrop-filter: blur(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255,255,255,0.04), transparent 45%);
+            z-index: 1; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+        }
+        .card:hover::before { opacity: 1; }
+
+        .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; z-index: 2; position: relative; }
+        .name-box h3 { font-size: 18px; font-weight: 700; color: white; word-break: break-all; }
+        .name-box div { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-family: monospace; }
+
+        .status-tag {
+            font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+            border: 1px solid transparent; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .tag-up { background: rgba(0, 255, 170, 0.05); color: var(--success); border-color: rgba(0, 255, 170, 0.1); }
+        .tag-down { background: rgba(255, 0, 85, 0.05); color: var(--danger); border-color: rgba(255, 0, 85, 0.1); }
+
+        .metrics-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+            z-index: 2;
+            position: relative;
+        }
+        .metric-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .metric-info {
+            display: flex;
+            flex-direction: column;
+            width: 72px;
+            flex-shrink: 0;
+        }
+        .metric-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            font-size: 13px;
+            font-weight: 800;
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric-visual {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            gap: 14px;
+        }
+        .progress-bar-wrap {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 4px;
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: var(--accent);
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .metric-sparkline {
+            width: 90px;
+            height: 18px;
+            flex-shrink: 0;
+            overflow: hidden;
+            opacity: 0.85;
+        }
+        .spark-svg { width: 100%; height: 100%; overflow: visible; }
+        .spark-path { stroke-linejoin: round; stroke-linecap: round; transition: d 0.5s ease; }
+        .spark-area { transition: d 0.5s ease; }
+
+        .footer-metrics {
+            display: flex; justify-content: space-between; padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.03); font-size: 11px; color: var(--text-dim);
+            z-index: 2; position: relative;
+        }
+
+        .footer-metrics span { display: flex; align-items: center; gap: 4px; }
+
+        .pro-footer {
+            margin-top: 100px; padding: 40px 0;
+            border-top: 1px solid var(--card-border); font-size: 11px; color: var(--text-dim);
+        }
+        .footer-content {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 20px;
+        }
+        .footer-left { display: flex; align-items: center; gap: 14px; }
+        .version-tag {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2px 6px; border-radius: 6px; font-family: monospace; font-weight: 700; color: var(--accent);
+        }
+        .footer-middle { display: flex; align-items: center; gap: 24px; font-weight: 600; }
+        .footer-status-item { display: flex; align-items: center; gap: 6px; }
+        .footer-status-item svg { width: 10px; height: 10px; opacity: 0.7; }
+        .footer-right { display: flex; align-items: center; gap: 12px; }
+        .footer-btn {
+            display: flex; align-items: center; gap: 6px; color: var(--text-dim); text-decoration: none;
+            background: rgba(255, 255, 255, 0.02); padding: 6px 14px; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03); transition: all 0.3s; font-weight: 600;
+        }
+        .footer-btn:hover {
+            color: white; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-state { text-align: center; padding: 60px; color: var(--text-dim); font-weight: 600; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="mesh"></div>
+    <div class="container">
+        
+        <div class="controls-panel">
+            <div class="brand-sec">
+                <svg class="lucide lucide-monitor-dot" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/><circle cx="12" cy="10" r="1"/></svg>
+                <div class="brand-text">
+                    <h1>DOCKERVIEW <span class="accent-text">GO</span></h1>
+                    <div class="live-indicator">
+                        <span class="pulse-dot"></span>
+                        <span>LIVE TELEMETRY</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-tabs">
+                <button class="tab-btn active" id="tab-all" onclick="setFilter('all')">ALL <span class="tab-badge" id="badge-all">0</span></button>
+                <button class="tab-btn" id="tab-running" onclick="setFilter('running')">RUNNING <span class="tab-badge" id="badge-running">0</span></button>
+                <button class="tab-btn" id="tab-stopped" onclick="setFilter('stopped')">STOPPED <span class="tab-badge" id="badge-stopped">0</span></button>
+            </div>
+
+            <div class="search-wrap">
+                <svg class="search-icon lucide lucide-search" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="search" class="search-input" placeholder="Search infrastructure nodes...">
+            </div>
+            
+            <div class="sort-wrap">
+                SORT BY
+                <button class="sort-btn active" onclick="setSort('name')">NAME</button>
+                <button class="sort-btn" onclick="setSort('cpu')">CPU</button>
+                <button class="sort-btn" onclick="setSort('ram')">RAM</button>
+            </div>
+        </div>
+
+        <div class="summary-dashboard">
+            <div class="stat-card">
+                <div class="stat-label">Total Nodes</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active</div>
+                <div class="stat-value" id="stat-up" style="color: var(--success)">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Load</div>
+                <div class="stat-value" id="stat-cpu">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Peak Memory</div>
+                <div class="stat-value" id="stat-ram">0 B</div>
+            </div>
+        </div>
+
+        <div id="running-section">
+            <div class="section-title">Active Deployments</div>
+            <div id="grid-running" class="grid"></div>
+        </div>
+
+        <div id="stopped-section">
+            <div class="section-title">Offline Instances</div>
+            <div id="grid-stopped" class="grid"></div>
+        </div>
+
+        <div id="empty-state-section" class="empty-state" style="display: none;">
+            No containers found matching current filters.
+        </div>
+
+        <footer class="pro-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span>© 2026 DockerView</span>
+                    <span class="version-tag">v0.1.6</span>
+                </div>
+                <div class="footer-middle">
+                    <div class="footer-status-item">
+                        <span class="pulse-dot"></span>
+                        <span>SSE STREAM RUNNING</span>
+                    </div>
+                    <div class="footer-status-item">
+                        <svg class="lucide lucide-refresh-cw" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                        <span>LAST UPDATED: <span id="last-update">--:--:--</span></span>
+                    </div>
+                </div>
+                <div class="footer-right">
+                    <a href="https://github.com/zsuroy/dockerview-go" target="_blank" class="footer-btn">
+                        <svg class="lucide lucide-github" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let lastData = [];
+        let currentSort = 'name';
+        let currentFilter = 'all';
+        const searchInput = document.getElementById('search');
+
+        // JS Data history for sparklines
+        const historyData = {}; // Format: { containerId: { cpu: [], ram: [] } }
+        const maxHistoryPoints = 20;
+
+        function setSort(s) {
+            currentSort = s;
+            document.querySelectorAll('.sort-wrap .sort-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === s));
+            updateUI(lastData);
+        }
+
+        function setFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('.filter-tabs .tab-btn').forEach(b => {
+                b.classList.toggle('active', b.id === 'tab-' + f);
+            });
+            updateUI(lastData);
+        }
+
+        function parseSize(s) {
+            if (!s || typeof s !== 'string') return 0;
+            const m = s.match(/^([\d.]+)\s*([a-zA-Z]+)$/);
+            if (!m) return 0;
+            const units = { 'B': 1, 'KB': 1024, 'MB': 1024**2, 'GB': 1024**3, 'TB': 1024**4 };
+            const unit = m[2].toUpperCase();
+            return parseFloat(m[1]) * (units[unit] || 1);
+        }
+
+        function formatBytes(b) {
+            if (isNaN(b) || b === null || b === undefined) return '0 B';
+            const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let i = 0;
+            while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+            return `${b.toFixed(1)} ${u[i]}`;
+        }
+
+        function highlightText(text, query) {
+            if (!text) return '';
+            if (!query) return text;
+            const index = text.toLowerCase().indexOf(query);
+            if (index === -1) return text;
+            const before = text.substring(0, index);
+            const match = text.substring(index, index + query.length);
+            const after = text.substring(index + query.length);
+            return `${before}<mark class="highlight">${match}</mark>${after}`;
+        }
+
+        // Draw an SVG path and optional fill area from numerical array
+        function drawSparkline(pathEl, areaEl, data, minVal = 0, fallbackMax = 10) {
+            if (!pathEl) return;
+            if (!data || data.length < 2) return;
+            const width = 120;
+            const height = 20;
+            const padding = 1;
+            
+            // Calculate dynamic max value to display small fluctuations clearly
+            const maxVal = Math.max(...data, fallbackMax);
+            
+            const points = data.map((val, idx) => {
+                const x = (idx / (data.length - 1)) * width;
+                const range = maxVal - minVal || 1;
+                const y = height - padding - (((val - minVal) / range) * (height - 2 * padding));
+                return { x, y };
+            });
+
+            const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+            pathEl.setAttribute('d', linePath);
+
+            if (areaEl) {
+                const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${height} L ${points[0].x.toFixed(1)} ${height} Z`;
+                areaEl.setAttribute('d', areaPath);
+            }
+        }
+
+        function updateUI(rawContainers) {
+            if (!rawContainers) rawContainers = [];
+            const containers = rawContainers.map(c => {
+                const normalized = {};
+                for (const key in c) {
+                    normalized[key.toLowerCase()] = c[key];
+                }
+                return normalized;
+            });
+            lastData = containers;
+            const query = (searchInput && searchInput.value || '').toLowerCase();
+            
+            const lastUpdateEl = document.getElementById('last-update');
+            if (lastUpdateEl) {
+                const now = new Date();
+                lastUpdateEl.innerText = now.toTimeString().split(' ')[0];
+            }
+            
+            // Filter and update raw badges first
+            const total = containers.length;
+            const runningList = containers.filter(c => c.status && !c.status.toLowerCase().includes('exit'));
+            const stoppedList = containers.filter(c => !c.status || c.status.toLowerCase().includes('exit'));
+            
+            const badgeAllEl = document.getElementById('badge-all');
+            const badgeRunningEl = document.getElementById('badge-running');
+            const badgeStoppedEl = document.getElementById('badge-stopped');
+            if (badgeAllEl) badgeAllEl.innerText = total;
+            if (badgeRunningEl) badgeRunningEl.innerText = runningList.length;
+            if (badgeStoppedEl) badgeStoppedEl.innerText = stoppedList.length;
+
+            const up = runningList.length;
+            const avgCpu = total ? (containers.reduce((a, b) => {
+                const val = parseFloat(b.cpu);
+                return a + (isNaN(val) ? 0 : val);
+            }, 0) / total).toFixed(1) : 0;
+            const peakRam = containers.length ? Math.max(...containers.map(c => parseSize(c.memory))) : 0;
+
+            const statTotalEl = document.getElementById('stat-total');
+            const statUpEl = document.getElementById('stat-up');
+            const statCpuEl = document.getElementById('stat-cpu');
+            const statRamEl = document.getElementById('stat-ram');
+            if (statTotalEl) statTotalEl.innerText = total;
+            if (statUpEl) statUpEl.innerText = up;
+            if (statCpuEl) statCpuEl.innerText = avgCpu + '%';
+            if (statRamEl) statRamEl.innerText = formatBytes(peakRam);
+
+            // Record history metrics for sparkline
+            containers.forEach(c => {
+                if (!c.id) return;
+                if (!historyData[c.id]) {
+                    historyData[c.id] = { cpu: [], ram: [] };
+                }
+                let cpuVal = parseFloat(c.cpu);
+                if (isNaN(cpuVal)) cpuVal = 0;
+                let ramPercent = Math.min((parseSize(c.memory) / (1024*1024*1024)) * 100, 100);
+                if (isNaN(ramPercent)) ramPercent = 0;
+                
+                historyData[c.id].cpu.push(cpuVal);
+                historyData[c.id].ram.push(ramPercent);
+                
+                if (historyData[c.id].cpu.length > maxHistoryPoints) historyData[c.id].cpu.shift();
+                if (historyData[c.id].ram.length > maxHistoryPoints) historyData[c.id].ram.shift();
+            });
+
+            // Filter lists based on status filter
+            let activeList = [];
+            if (currentFilter === 'all') {
+                activeList = containers;
+            } else if (currentFilter === 'running') {
+                activeList = runningList;
+            } else if (currentFilter === 'stopped') {
+                activeList = stoppedList;
+            }
+
+            // Filter based on search query
+            let filtered = activeList.filter(c => {
+                const nameMatch = c.name && c.name.toLowerCase().includes(query);
+                const idMatch = c.id && c.id.toLowerCase().includes(query);
+                return nameMatch || idMatch;
+            });
+            
+            // Sort
+            filtered.sort((a, b) => {
+                if (currentSort === 'cpu') {
+                    const cpuA = parseFloat(a.cpu) || 0;
+                    const cpuB = parseFloat(b.cpu) || 0;
+                    return cpuB - cpuA;
+                }
+                if (currentSort === 'ram') {
+                    return parseSize(b.memory) - parseSize(a.memory);
+                }
+                const nameA = a.name || '';
+                const nameB = b.name || '';
+                return nameA.localeCompare(nameB);
+            });
+
+            const showRunning = filtered.filter(c => c.status && !c.status.toLowerCase().includes('exit'));
+            const showStopped = filtered.filter(c => !c.status || c.status.toLowerCase().includes('exit'));
+
+            const runningGrid = document.getElementById('grid-running');
+            const stoppedGrid = document.getElementById('grid-stopped');
+            if (runningGrid) renderGrid(runningGrid, showRunning, query);
+            if (stoppedGrid) renderGrid(stoppedGrid, showStopped, query);
+
+            const hasResults = filtered.length > 0;
+            const emptyState = document.getElementById('empty-state-section');
+            if (emptyState) emptyState.style.display = hasResults ? 'none' : 'block';
+        }
+
+        function renderGrid(grid, list, query) {
+            const currentIds = new Set(list.map(c => c.id));
+            Array.from(grid.children).forEach(w => {
+                if (!currentIds.has(w.querySelector('.card').getAttribute('data-id'))) w.remove();
+            });
+
+            if (!list.length) {
+                grid.parentElement.style.display = 'none';
+                return;
+            } else {
+                grid.parentElement.style.display = 'block';
+            }
+
+            list.forEach((c, i) => {
+                let wrapper = grid.querySelector(`[data-id="${c.id}"]`)?.parentElement;
+                if (!wrapper) {
+                    wrapper = document.createElement('div');
+                    wrapper.className = 'card-wrapper';
+                    wrapper.innerHTML = `
+                        <div class="card" data-id="${c.id}">
+                            <div class="card-head">
+                                <div class="name-box">
+                                    <h3></h3>
+                                    <div></div>
+                                </div>
+                                <span class="status-tag">STATUS</span>
+                            </div>
+                            <div class="metrics-area">
+                                <div class="metric-row">
+                                    <div class="metric-info">
+                                        <span class="metric-label">CPU LOAD</span>
+                                        <span class="metric-value cpu-txt">0%</span>
+                                    </div>
+                                    <div class="metric-visual">
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar-fill cpu-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="metric-sparkline">
+                                            <svg class="spark-svg" viewBox="0 0 120 20">
+                                                <defs>
+                                                    <linearGradient id="cpu-grad-${c.id}" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
+                                                        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <path class="spark-path spark-cpu-path" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+                                                <path class="spark-area spark-cpu-area" fill="url(#cpu-grad-${c.id})" stroke="none"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="metric-row">
+                                    <div class="metric-info">
+                                        <span class="metric-label">RAM USAGE</span>
+                                        <span class="metric-value ram-txt">0B</span>
+                                    </div>
+                                    <div class="metric-visual">
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar-fill ram-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="metric-sparkline">
+                                            <svg class="spark-svg" viewBox="0 0 120 20">
+                                                <defs>
+                                                    <linearGradient id="ram-grad-${c.id}" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stop-color="var(--ram-color)" stop-opacity="0.15"/>
+                                                        <stop offset="100%" stop-color="var(--ram-color)" stop-opacity="0"/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <path class="spark-path spark-ram-path" fill="none" stroke="var(--ram-color)" stroke-width="1.5"/>
+                                                <path class="spark-area spark-ram-area" fill="url(#ram-grad-${c.id})" stroke="none"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer-metrics">
+                                <span><svg class="lucide lucide-arrow-down-up" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg> <span class="net-value">${c.network}</span></span>
+                                <span><svg class="lucide lucide-hard-drive" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 18h.01"/><path d="M10 18h.01"/><path d="M2 14v-3c0-3.87 3.13-7 7-7h6c3.87 0 7 3.13 7 7v3"/></svg> <span class="blk-value">${c.blkio}</span></span>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(wrapper);
+                    addTilt(wrapper);
+                }
+
+                const card = wrapper.querySelector('.card');
+                if (!card) return;
+                
+                const isUp = c.status && !c.status.toLowerCase().includes('exit');
+                
+                // Highlight search queries in container name and ID
+                const nameH3 = card.querySelector('.name-box h3');
+                const nameDiv = card.querySelector('.name-box div');
+                if (nameH3) nameH3.innerHTML = highlightText(c.name, query);
+                if (nameDiv) nameDiv.innerHTML = highlightText(c.id, query);
+
+                // Update Tag
+                const tag = card.querySelector('.status-tag');
+                if (tag) {
+                    tag.innerText = isUp ? 'Running' : 'Stopped';
+                    tag.className = `status-tag ${isUp ? 'tag-up' : 'tag-down'}`;
+                }
+
+                // Update metrics & progress bars
+                let cpu = parseFloat(c.cpu);
+                if (isNaN(cpu)) cpu = 0;
+                let ramPercent = Math.min((parseSize(c.memory) / (1024*1024*1024)) * 100, 100);
+                if (isNaN(ramPercent)) ramPercent = 0;
+
+                updateMetricRow(card.querySelector('.cpu-fill'), card.querySelector('.cpu-txt'), cpu, null, false);
+                updateMetricRow(card.querySelector('.ram-fill'), card.querySelector('.ram-txt'), ramPercent, c.memory, true);
+                
+                // Render Sparklines
+                const history = historyData[c.id] || { cpu: [0,0], ram: [0,0] };
+                drawSparkline(card.querySelector('.spark-cpu-path'), card.querySelector('.spark-cpu-area'), history.cpu, 0, 10);
+                drawSparkline(card.querySelector('.spark-ram-path'), card.querySelector('.spark-ram-area'), history.ram, 0, 10);
+
+                const netValueEl = card.querySelector('.net-value');
+                const blkValueEl = card.querySelector('.blk-value');
+                if (netValueEl) netValueEl.innerText = c.network || '0 B / 0 B';
+                if (blkValueEl) blkValueEl.innerText = c.blkio || '0 B / 0 B';
+                card.style.order = i;
+            });
+        }
+
+        function updateMetricRow(barFill, txtEl, percent, custom, isRam) {
+            if (!barFill || !txtEl) return;
+            if (isNaN(percent)) percent = 0;
+            barFill.style.width = percent + '%';
+            txtEl.innerText = custom || (percent.toFixed(0) + '%');
+            
+            const color = percent > 80 ? 'var(--danger)' : (percent > 50 ? 'var(--warning)' : (isRam ? 'var(--ram-color)' : 'var(--accent)'));
+            barFill.style.background = color;
+        }
+
+        function addTilt(el) {
+            if (!el) return;
+            el.addEventListener('mousemove', (e) => {
+                const card = el.querySelector('.card');
+                if (!card) return;
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+                
+                const rotX = -((y / rect.height) - 0.5) * 8; // Max 4 deg rotation
+                const rotY = ((x / rect.width) - 0.5) * 8;
+                
+                card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-2px)`;
+                
+                const tag = card.querySelector('.status-tag');
+                const hasGlow = tag && tag.classList.contains('tag-up');
+                card.style.boxShadow = `0 15px 35px rgba(0,0,0,0.5), 0 0 15px ${hasGlow ? 'rgba(0, 255, 170, 0.08)' : 'rgba(255, 0, 85, 0.08)'}`;
+            });
+            
+            el.addEventListener('mouseleave', (e) => { 
+                const card = el.querySelector('.card');
+                if (!card) return;
+                card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)'; 
+                card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            });
+        }
+
+        searchInput.addEventListener('input', () => updateUI(lastData));
+
+        function connect() {
+            const es = new EventSource('/stream');
+            es.onmessage = e => updateUI(JSON.parse(e.data));
+            es.onerror = () => { es.close(); setTimeout(connect, 2000); };
+        }
+        connect();
+    </script>
+</body>
+</html>

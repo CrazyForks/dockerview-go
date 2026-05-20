@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zsuroy/dockerview-go/internal/docker"
+	"github.com/zsuroy/dockerview-go/internal/server"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -18,6 +19,8 @@ func main() {
 	updateTolatest := flag.Bool("update", false, "update to the latest")
 	showVersion := flag.Bool("version", false, "Show version")
 	showHelp := flag.Bool("help", false, "Show help")
+	enableServer := flag.Bool("server", false, "Enable HTTP server for real-time data")
+	serverPort := flag.Int("port", 8080, "Port for HTTP server")
 	flag.Parse()
 
 	SetColor()
@@ -46,10 +49,20 @@ func main() {
 	}
 	defer client.Close()
 
-	m := &model{}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	var srv *server.Server
+	if *enableServer {
+		srv = server.NewServer()
+		go func() {
+			if err := srv.Start(ctx, *serverPort); err != nil {
+				// We don't want to crash the TUI if the server fails, but maybe log it
+			}
+		}()
+	}
+
+	m := &model{}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -70,6 +83,10 @@ func main() {
 				m.containers = containers
 				m.err = err
 				m.mu.Unlock()
+
+				if srv != nil && err == nil {
+					srv.UpdateData(containers)
+				}
 			}
 		}
 	}()
@@ -89,6 +106,10 @@ func printHelp() {
 	fmt.Println("OPTIONS:")
 	fmt.Println("  -update")
 	fmt.Println("        Update to the latest")
+	fmt.Println("  -server")
+	fmt.Println("        Enable HTTP server for real-time data")
+	fmt.Println("  -port int")
+	fmt.Println("        Port for HTTP server (default 8080)")
 	fmt.Println("  -help")
 	fmt.Println("        Show this help message")
 	fmt.Println("  -version")
