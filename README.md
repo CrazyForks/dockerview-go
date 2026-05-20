@@ -1,6 +1,10 @@
 # DockerView-Go
 
-A beautiful terminal-based Docker container monitoring tool built with Go and bubbletea.
+A beautiful terminal-based Docker container monitoring tool built with Go and bubbletea, featuring a gorgeous real-time web dashboard.
+
+## Demo
+
+![DockerView Go Demo](assets/demo.gif)
 
 ## Features
 
