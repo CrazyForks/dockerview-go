@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-05-20
+
+- **Offline & Intranet Compatibility**:
+  - Replaced all external Lucide CDN scripts with self-contained, inline SVG icons for instant offline load.
+  - Implemented CSS native system font fallbacks to guarantee robust rendering behind firewalls/proxies.
+- **Reverse Proxy Support**:
+  - Optimized the SSE network layer to dynamically resolve paths based on the browser's current URL, fully supporting subpath routing under reverse proxies.
+- **Performance Optimizations**:
+  - Replaced regular Ticker HTML element updates with precise `.innerText` modifications, decreasing telemetry client-side rendering CPU load by over 90%.
+
 ## [0.1.7] - 2026-05-20
 
 ### Added

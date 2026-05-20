@@ -363,7 +363,7 @@
             <div class="footer-content">
                 <div class="footer-left">
                     <span>© 2026 DockerView</span>
-                    <span class="version-tag">v0.1.6</span>
+                    <span class="version-tag">v0.1.8</span>
                 </div>
                 <div class="footer-middle">
                     <div class="footer-status-item">
@@ -741,7 +741,9 @@
         searchInput.addEventListener('input', () => updateUI(lastData));
 
         function connect() {
-            const es = new EventSource('/stream');
+            const currentPath = window.location.pathname;
+            const basePath = currentPath.endsWith('/') ? currentPath : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            const es = new EventSource(basePath + 'stream');
             es.onmessage = e => updateUI(JSON.parse(e.data));
             es.onerror = () => { es.close(); setTimeout(connect, 2000); };
         }
