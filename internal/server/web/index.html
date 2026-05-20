@@ -363,7 +363,7 @@
             <div class="footer-content">
                 <div class="footer-left">
                     <span>© 2026 DockerView</span>
-                    <span class="version-tag">v0.1.8</span>
+                    <span class="version-tag">v0.1.9</span>
                 </div>
                 <div class="footer-middle">
                     <div class="footer-status-item">
@@ -694,7 +694,7 @@
                 const blkValueEl = card.querySelector('.blk-value');
                 if (netValueEl) netValueEl.innerText = c.network || '0 B / 0 B';
                 if (blkValueEl) blkValueEl.innerText = c.blkio || '0 B / 0 B';
-                card.style.order = i;
+                wrapper.style.order = i;
             });
         }
 
