@@ -9,6 +9,7 @@ A beautiful terminal-based Docker container monitoring tool built with Go and bu
 - **Color-coded Status**: Green for running, red for stopped/exited containers
 - **CPU Alerts**: High CPU usage (>50%) highlighted in red
 - **Auto-detection**: Automatically detects Docker socket (including Colima)
+- **Web Dashboard**: Enable the HTTP server (`-server`) to broadcast real-time container telemetry using Server-Sent Events (SSE) `/stream` and host a gorgeous glassmorphism web console with live SVG sparkline history, status filters, search highlighting, and 3D hover effects.
 
 ## Requirements
 
@@ -17,6 +18,14 @@ A beautiful terminal-based Docker container monitoring tool built with Go and bu
 - Terminal with true color support (recommended)
 
 ## Installation
+
+### Using `go install`
+
+```bash
+go install github.com/zsuroy/dockerview-go/cmd/dockerview@latest
+```
+
+Make sure `$GOPATH/bin` (or `$HOME/go/bin`) is in your `PATH`.
 
 ### From Source
 
@@ -40,6 +49,20 @@ go run ./cmd/dockerview/
 ```
 
 Press `Ctrl+C` to exit the application.
+
+### Web Dashboard & Server Mode
+
+You can run `dockerview` with an HTTP server enabled to view a real-time web dashboard from any browser:
+
+```bash
+# Enable HTTP server on default port 8080
+./build/dockerview -server
+
+# Customize the HTTP server port (e.g. 8023)
+./build/dockerview -server -port 8023
+```
+
+Once started, navigate to `http://localhost:8080` (or your custom port) in your web browser to access the interactive web console.
 
 ### Docker Socket
 
@@ -80,6 +103,10 @@ dockerview-go/
 ├── internal/docker/          # Docker client
 │   ├── client.go             # Docker API client
 │   └── client_test.go        # Tests
+├── internal/server/          # HTTP & SSE Server
+│   ├── server.go             # SSE connection broadcaster and server logic
+│   └── web/                  # Web Assets
+│       └── index.html        # Embedded Premium Web Dashboard UI/UX
 ├── .github/                  # CI/CD
 ├── Makefile                  # Build commands
 ├── go.mod/go.sum             # Go modules

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-05-20
+
+### Added
+
+- Add HTTP Server and Real-time Web Dashboard (`-server` and `-port` flags)
+- Stream real-time container metrics using Server-Sent Events (SSE) `/stream`
+- Premium, interactive glassmorphic web interface:
+  - CPU and Memory horizontal progress rows
+  - Dynamic real-time SVG sparklines showing metrics history
+  - Segmented status filter tabs (All, Running, Stopped) with live badges
+  - Instant fuzzy search with matching query text highlighting
+  - 3D hover card tilt with follow-mouse radial glow
+  - Automatic JSON case normalization for cross-client compatibility
+
 ## [0.1.6] - 2026-03-19
 
 ### Fixes
