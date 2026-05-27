@@ -16,7 +16,7 @@ func doUpdate() error {
 	}
 
 	url := fmt.Sprintf("https://github.com/%s/releases/latest/download/%s", repo, assetsName)
-	fmt.Printf("Donwloading from %s...\n", url)
+	fmt.Printf("Downloading from %s...\n", url)
 
 	resp, err := http.Get(url)
 	if err != nil {

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10] - 2026-05-27
+
+### Changed
+
+- **Performance**: Extract lipgloss styles to package-level vars, avoiding repeated allocations per `View()` render
+- **Performance**: Replace `time.After` with `time.NewTicker` in polling loop to prevent timer leaks
+- **Performance**: Cache embedded web dashboard HTML at startup instead of reading on every HTTP request
+- **Performance**: Deduplicate `os.UserHomeDir()` call in Docker socket detection
+- **Concurrency**: Switch `model.mu` from `sync.Mutex` to `sync.RWMutex`, allowing concurrent reads in `View()`
+- **Code quality**: Remove redundant `colStyles` array (7 identical copies of `headerStyle`)
+- **Code quality**: Remove duplicate ID truncation (already truncated in `client.go`)
+- **Code quality**: Log server startup errors to stderr instead of silently swallowing them
+- **Fix**: Correct typo "Donwloading" in self-update output
+
 ## [0.1.9] - 2026-05-20
 
 ### Fixed

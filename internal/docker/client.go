@@ -71,6 +71,7 @@ func detectUnixSockets() []string {
 	if home != "" {
 		sockets = append(sockets, home+"/.colima/default/docker.sock")
 		sockets = append(sockets, home+"/.orbstack/run/docker.sock")
+		sockets = append(sockets, home+"/.minikube/apiserver.sock")
 
 		if runtime.GOOS == "darwin" {
 			sockets = append(sockets, home+"/Library/Containers/rancher-desktop/Data/docker.sock")
@@ -83,10 +84,6 @@ func detectUnixSockets() []string {
 		if uid := os.Getuid(); uid != 0 {
 			sockets = append(sockets, fmt.Sprintf("/run/user/%d/podman/podman.sock", uid))
 		}
-	}
-
-	if home, _ := os.UserHomeDir(); home != "" {
-		sockets = append(sockets, home+"/.minikube/apiserver.sock")
 	}
 
 	return sockets

@@ -19,12 +19,15 @@ type Server struct {
 	mu          sync.RWMutex
 	clients     map[chan []docker.ContainerInfo]bool
 	currentData []docker.ContainerInfo
+	dashboard   []byte
 }
 
 // NewServer creates a new Server instance.
 func NewServer() *Server {
+	data, _ := webContent.ReadFile("web/index.html")
 	return &Server{
-		clients: make(map[chan []docker.ContainerInfo]bool),
+		clients:   make(map[chan []docker.ContainerInfo]bool),
+		dashboard: data,
 	}
 }
 
@@ -75,13 +78,12 @@ func (s *Server) Start(ctx context.Context, port int) error {
 }
 
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	content, err := webContent.ReadFile("web/index.html")
-	if err != nil {
+	if s.dashboard == nil {
 		http.Error(w, "Dashboard not found", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html")
-	w.Write(content)
+	w.Write(s.dashboard)
 }
 
 func (s *Server) handleData(w http.ResponseWriter, r *http.Request) {
