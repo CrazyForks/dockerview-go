@@ -62,7 +62,7 @@ func main() {
 		}()
 	}
 
-	m := &model{}
+	m := &model{dockerClient: client}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -122,6 +122,13 @@ func printHelp() {
 	fmt.Println("  dockerview -version")
 	fmt.Println()
 	fmt.Println("CONTROLS:")
+	fmt.Println("  ↑/↓       Select container")
+	fmt.Println("  Enter     Show actions")
+	fmt.Println("  s         Start container")
+	fmt.Println("  x         Stop container")
+	fmt.Println("  r         Restart container")
+	fmt.Println("  l         View logs")
+	fmt.Println("  q/Esc     Back / Exit")
 	fmt.Println("  Ctrl+C    Exit application")
 	fmt.Println()
 	fmt.Println("DOCKER SOCKET:")

@@ -1,8 +1,19 @@
 package docker
 
 import (
+	"context"
 	"testing"
 )
+
+func TestContainerOpUnknownOp(t *testing.T) {
+	err := ContainerOp(context.Background(), nil, "abc123", "unknown")
+	if err == nil {
+		t.Error("expected error for unknown operation")
+	}
+	if err.Error() != "unknown operation: unknown" {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
 
 func TestFormatBytes(t *testing.T) {
 	tests := []struct {

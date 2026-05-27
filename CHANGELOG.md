@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.10] - 2026-05-27
+## [0.1.11] - 2026-05-27
+
+### Added
+
+- **Container operations**: Start, stop, restart containers directly from the TUI
+- **Log viewer**: View last 100 lines of container logs inline
+- **Keyboard navigation**: Arrow keys to select containers, Enter to open action panel
+- Action bar with keybindings: `s`tart, `x`stop, `r`estart, `l`ogs, `q`uit
 
 ### Changed
 
