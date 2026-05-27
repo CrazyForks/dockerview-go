@@ -57,7 +57,7 @@ func main() {
 		srv = server.NewServer()
 		go func() {
 			if err := srv.Start(ctx, *serverPort); err != nil {
-				// We don't want to crash the TUI if the server fails, but maybe log it
+				fmt.Fprintf(os.Stderr, "HTTP server error: %v\n", err)
 			}
 		}()
 	}
@@ -73,11 +73,13 @@ func main() {
 	}()
 
 	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(time.Second):
+			case <-ticker.C:
 				containers, err := docker.GetContainerStats(ctx, client)
 				m.mu.Lock()
 				m.containers = containers
