@@ -14,10 +14,41 @@ import (
 )
 
 type model struct {
-	mu         sync.Mutex
+	mu         sync.RWMutex
 	containers []docker.ContainerInfo
 	err        error
 }
+
+var (
+	styleBorder = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#444444")).
+			Padding(1, 2)
+
+	styleHeader = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FFA500"))
+
+	styleTitle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#00D9FF"))
+
+	styleSubtitle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#666666"))
+
+	styleID        = lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(14)
+	styleName      = lipgloss.NewStyle().Width(20)
+	styleMemory    = lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(10)
+	styleBlkio     = lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(18)
+	styleNetwork   = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Width(18)
+	styleCPUOk     = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Width(8)
+	styleCPUHot    = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4444")).Width(8)
+	styleStatusOk  = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Width(18)
+	styleStatusBad = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4444")).Width(18)
+
+	styleError = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4444"))
+	styleEmpty = lipgloss.NewStyle().Foreground(lipgloss.Color("#888888"))
+)
 
 type tickMsg struct {
 	time.Time
@@ -44,57 +75,27 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) View() string {
-	m.mu.Lock()
+	m.mu.RLock()
 	containers := m.containers
 	err := m.err
-	m.mu.Unlock()
+	m.mu.RUnlock()
 
-	border := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#444444")).
-		Padding(1, 2)
-
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FFA500"))
-
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#00D9FF")).
-		Render("DockerView Monitor " + Version)
-
-	subtitle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#666666")).
-		Render("Press Ctrl+C to exit")
-
-	colStyles := []lipgloss.Style{
-		headerStyle,
-		headerStyle,
-		headerStyle,
-		headerStyle,
-		headerStyle,
-		headerStyle,
-		headerStyle,
-	}
+	title := styleTitle.Render("DockerView Monitor " + Version)
+	subtitle := styleSubtitle.Render("Press Ctrl+C to exit")
 
 	header := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		colStyles[0].Width(14).Render("ID"),
-		colStyles[1].Width(20).Render("Name"),
-		colStyles[2].Width(8).Render("CPU"),
-		colStyles[3].Width(10).Render("Memory"),
-		colStyles[4].Width(18).Render("Storage"),
-		colStyles[5].Width(18).Render("Network"),
-		colStyles[6].Width(18).Render("Status"),
+		styleHeader.Width(14).Render("ID"),
+		styleHeader.Width(20).Render("Name"),
+		styleHeader.Width(8).Render("CPU"),
+		styleHeader.Width(10).Render("Memory"),
+		styleHeader.Width(18).Render("Storage"),
+		styleHeader.Width(18).Render("Network"),
+		styleHeader.Width(18).Render("Status"),
 	)
 
 	var rows []string
 	for _, c := range containers {
-		id := c.ID
-		if len(id) > 12 {
-			id = id[:12]
-		}
-
 		name := c.Name
 		if len(name) > 20 {
 			name = name[:18] + ".."
@@ -107,37 +108,34 @@ func (m *model) View() string {
 
 		cpuVal, _ := strconv.ParseFloat(strings.TrimSuffix(c.CPU, "%"), 64)
 
-		var statusColor, cpuColor lipgloss.Color
-		if strings.Contains(strings.ToLower(c.Status), "exit") {
-			statusColor = lipgloss.Color("#FF4444")
-		} else {
-			statusColor = lipgloss.Color("#00FF00")
+		cpuStyle := styleCPUOk
+		if cpuVal >= 50 {
+			cpuStyle = styleCPUHot
 		}
 
-		if cpuVal >= 50 {
-			cpuColor = lipgloss.Color("#FF4444")
-		} else {
-			cpuColor = lipgloss.Color("#00FF00")
+		statusStyle := styleStatusOk
+		if strings.Contains(strings.ToLower(c.Status), "exit") {
+			statusStyle = styleStatusBad
 		}
 
 		row := lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(14).Render(id),
-			lipgloss.NewStyle().Width(20).Render(name),
-			lipgloss.NewStyle().Foreground(cpuColor).Width(8).Render(c.CPU),
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(10).Render(c.Memory),
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#00D9FF")).Width(18).Render(c.Blkio),
-			lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Width(18).Render(c.Network),
-			lipgloss.NewStyle().Foreground(statusColor).Width(18).Render(status),
+			styleID.Render(c.ID),
+			styleName.Render(name),
+			cpuStyle.Render(c.CPU),
+			styleMemory.Render(c.Memory),
+			styleBlkio.Render(c.Blkio),
+			styleNetwork.Render(c.Network),
+			statusStyle.Render(status),
 		)
 		rows = append(rows, row)
 	}
 
 	if len(rows) == 0 {
 		if err != nil {
-			rows = append(rows, lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4444")).Render("Error: "+err.Error()))
+			rows = append(rows, styleError.Render("Error: "+err.Error()))
 		} else {
-			rows = append(rows, lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("No containers running"))
+			rows = append(rows, styleEmpty.Render("No containers running"))
 		}
 	}
 
@@ -149,5 +147,5 @@ func (m *model) View() string {
 		strings.Join(rows, "\n"),
 	)
 
-	return border.Render(content)
+	return styleBorder.Render(content)
 }
