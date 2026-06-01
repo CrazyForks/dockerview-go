@@ -713,6 +713,8 @@
     </div>
 
     <script>
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.endsWith('/') ? currentPath : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
         let lastData = [];
         let currentSort = 'name';
         let currentFilter = 'all';
@@ -1151,7 +1153,7 @@
             showToast(`${op.charAt(0).toUpperCase() + op.slice(1)}ing container ${containerName}...`, 'info');
             
             try {
-                const response = await fetch(`/api/container/op?id=${containerId}&op=${op}&token=${serverToken}`, {
+                const response = await fetch(`${basePath}api/container/op?id=${containerId}&op=${op}&token=${serverToken}`, {
                     method: 'POST'
                 });
                 
@@ -1205,7 +1207,7 @@
         async function fetchLogs() {
             if (!activeLogsContainerId) return;
             try {
-                const response = await fetch(`/api/container/logs?id=${activeLogsContainerId}&tail=100&token=${serverToken}`);
+                const response = await fetch(`${basePath}api/container/logs?id=${activeLogsContainerId}&tail=100&token=${serverToken}`);
                 if (response.ok) {
                     const text = await response.text();
                     const viewer = document.getElementById('logs-viewer');
