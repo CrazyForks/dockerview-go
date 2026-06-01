@@ -5,9 +5,11 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 
+	"github.com/docker/docker/client"
 	"github.com/zsuroy/dockerview-go/internal/docker"
 )
 
@@ -16,19 +18,55 @@ var webContent embed.FS
 
 // Server implements an HTTP server that forwards Docker container data.
 type Server struct {
-	mu          sync.RWMutex
-	clients     map[chan []docker.ContainerInfo]bool
-	currentData []docker.ContainerInfo
-	dashboard   []byte
+	mu           sync.RWMutex
+	clients      map[chan []docker.ContainerInfo]bool
+	currentData  []docker.ContainerInfo
+	dashboard    []byte
+	dockerClient *client.Client
+	token        string
 }
 
 // NewServer creates a new Server instance.
-func NewServer() *Server {
+func NewServer(cli *client.Client, token string) *Server {
 	data, _ := webContent.ReadFile("web/index.html")
 	return &Server{
-		clients:   make(map[chan []docker.ContainerInfo]bool),
-		dashboard: data,
+		clients:      make(map[chan []docker.ContainerInfo]bool),
+		dashboard:    data,
+		dockerClient: cli,
+		token:        token,
 	}
+}
+
+// checkAuth checks if the request is authenticated.
+func (s *Server) checkAuth(w http.ResponseWriter, r *http.Request) bool {
+	if s.token == "" {
+		return true // No security configured
+	}
+
+	// 1. Check query param
+	token := r.URL.Query().Get("token")
+	if token == s.token {
+		return true
+	}
+
+	// 2. Check header X-Auth-Token
+	if r.Header.Get("X-Auth-Token") == s.token {
+		return true
+	}
+
+	// 3. Check Authorization Bearer header
+	authHeader := r.Header.Get("Authorization")
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		if authHeader[7:] == s.token {
+			return true
+		}
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte("Unauthorized: Invalid or missing security token"))
+	return false
 }
 
 // UpdateData updates the current container data and broadcasts it to all connected clients.
@@ -57,6 +95,8 @@ func (s *Server) Start(ctx context.Context, port int) error {
 	mux.HandleFunc("/stream", s.handleStream)
 	mux.HandleFunc("/data", s.handleData)
 	mux.HandleFunc("/dashboard", s.handleDashboard)
+	mux.HandleFunc("/api/container/op", s.handleContainerOp)
+	mux.HandleFunc("/api/container/logs", s.handleContainerLogs)
 	mux.HandleFunc("/", s.handleDashboard) // Also serve at root for convenience
 
 	server := &http.Server{
@@ -153,4 +193,84 @@ func sendSSE(w http.ResponseWriter, data []docker.ContainerInfo) error {
 	}
 	_, err = fmt.Fprintf(w, "data: %s\n\n", jsonData)
 	return err
+}
+
+func (s *Server) handleContainerOp(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(w, r) {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	op := r.URL.Query().Get("op")
+	if id == "" || op == "" {
+		http.Error(w, "Missing 'id' or 'op' parameter", http.StatusBadRequest)
+		return
+	}
+
+	s.mu.RLock()
+	cli := s.dockerClient
+	s.mu.RUnlock()
+
+	if cli == nil {
+		http.Error(w, "Docker client not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	err := docker.ContainerOp(r.Context(), cli, id, op)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to perform operation: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "op": op})
+}
+
+func (s *Server) handleContainerLogs(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(w, r) {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	tail := r.URL.Query().Get("tail")
+	if id == "" {
+		http.Error(w, "Missing 'id' parameter", http.StatusBadRequest)
+		return
+	}
+	if tail == "" {
+		tail = "100"
+	}
+
+	s.mu.RLock()
+	cli := s.dockerClient
+	s.mu.RUnlock()
+
+	if cli == nil {
+		http.Error(w, "Docker client not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	reader, err := docker.GetContainerLogs(r.Context(), cli, id, tail)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get logs: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.Copy(w, reader)
 }

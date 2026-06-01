@@ -8,12 +8,15 @@ A beautiful terminal-based Docker container monitoring tool built with Go and bu
 
 ## Features
 
-- **Real-time Monitoring**: Updates every second
-- **Beautiful UI**: Built with [bubbletea](https://github.com/charmbracelet/bubbletea) and [lipgloss](https://github.com/charmbracelet/lipgloss)
-- **Color-coded Status**: Green for running, red for stopped/exited containers
-- **CPU Alerts**: High CPU usage (>50%) highlighted in red
-- **Auto-detection**: Automatically detects Docker socket (including Colima)
-- **Web Dashboard**: Enable the HTTP server (`-server`) to broadcast real-time container telemetry using Server-Sent Events (SSE) `/stream` and host a gorgeous glassmorphism web console with live SVG sparkline history, status filters, search highlighting, and 3D hover effects.
+- **Real-time Monitoring**: Updates every second.
+- **Beautiful TUI**: Built with [bubbletea](https://github.com/charmbracelet/bubbletea) and [lipgloss](https://github.com/charmbracelet/lipgloss) with keybindings for start, stop, restart, and inline logs viewing.
+- **Real-Time Web Dashboard**: Enable the HTTP server (`-server`) to broadcast real-time container telemetry using Server-Sent Events (SSE) `/stream` and host a gorgeous glassmorphism web console with live SVG sparkline history, status filters, search highlighting, and 3D hover effects.
+- **Web Container Controls**: Start, stop, and restart containers directly from the Web Dashboard.
+- **Inline Logs Modal**: Read container logs from TUI or in a clean web modal with auto-scroll and 3-second auto-polling updates (properly demultiplexed to avoid header garbage characters).
+- **Token Security**: Secured control API and log endpoints with token verification. Automatically generates secure startup keys, supports guest/read-only mode, and stores session tokens in localStorage.
+- **Color-coded Status**: Green for running, red for stopped/exited containers.
+- **CPU Alerts**: High CPU usage (>50%) highlighted in red.
+- **Auto-detection**: Automatically detects Docker socket (including Unix sockets, WSL, Colima, OrbStack, Podman, Rancher Desktop, etc.).
 
 ## Requirements
 
@@ -64,9 +67,21 @@ You can run `dockerview` with an HTTP server enabled to view a real-time web das
 
 # Customize the HTTP server port (e.g. 8023)
 ./build/dockerview -server -port 8023
+
+# Set a custom security token
+./build/dockerview -server -token my-secret-token
 ```
 
 Once started, navigate to `http://localhost:8080` (or your custom port) in your web browser to access the interactive web console.
+
+#### Security & Guest View Mode
+
+- **Guest View (Read-Only)**: Anyone can open the dashboard to view real-time telemetry (CPU/Memory loads, network, block I/O) without entering a token.
+- **Authenticated Controls (Admin)**: Modifying actions (Start, Stop, Restart) and viewing container Logs are protected and require a security token.
+- **Token Management**:
+  - If no token is specified via the `-token` flag or the `DOCKERVIEW_TOKEN` environment variable, a 16-byte random hex token is securely generated on startup and printed in the console.
+  - When clicking an admin action or logs for the first time, a secure input overlay modal will appear. Once entered, the token is saved in the browser's `localStorage`.
+  - Visiting the dashboard via the auto-generated URL `http://localhost:8080/?token=<token>` automatically authenticates your session and cleans up the address bar for clean sharing.
 
 ### Docker Socket
 

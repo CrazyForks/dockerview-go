@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 type ContainerInfo struct {
+	FullID  string
 	ID      string
 	Name    string
 	Status  string
@@ -114,6 +117,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 		}
 
 		result = append(result, ContainerInfo{
+			FullID: c.ID,
 			ID:     truncateID(c.ID, 12),
 			Name:   extractContainerName(c.Names),
 			Status: status,
@@ -254,4 +258,47 @@ func truncateID(id string, length int) string {
 		return id[:length]
 	}
 	return id
+}
+
+func ContainerOp(ctx context.Context, cli *client.Client, containerID, op string) error {
+	switch op {
+	case "start":
+		return cli.ContainerStart(ctx, containerID, container.StartOptions{})
+	case "stop":
+		return cli.ContainerStop(ctx, containerID, container.StopOptions{})
+	case "restart":
+		return cli.ContainerRestart(ctx, containerID, container.StopOptions{})
+	default:
+		return fmt.Errorf("unknown operation: %s", op)
+	}
+}
+
+func GetContainerLogs(ctx context.Context, cli *client.Client, containerID, tail string) (io.ReadCloser, error) {
+	inspect, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := cli.ContainerLogs(ctx, containerID, container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Tail:       tail,
+		Follow:     false,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if inspect.Config.Tty {
+		return reader, nil
+	}
+
+	defer reader.Close()
+	var buf bytes.Buffer
+	_, err = stdcopy.StdCopy(&buf, &buf, reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
