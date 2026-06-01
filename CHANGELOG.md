@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Log viewer**: View last 100 lines of container logs inline
 - **Keyboard navigation**: Arrow keys to select containers, Enter to open action panel
 - Action bar with keybindings: `s`tart, `x`stop, `r`estart, `l`ogs, `q`uit
+- **Web Container Controls**: Start, stop, restart containers directly from the Web Dashboard.
+- **Web Log Viewer**: View inline container logs with auto-scroll and 3-second auto-polling stream in a sleek glassmorphic modal.
+- **Security & Authentication**:
+  - Secure token-based authentication for Web control APIs and logs.
+  - Auto-generated 16-byte random security tokens printed on startup, customizable via `-token` flag or `DOCKERVIEW_TOKEN` environment variable.
+  - "Guest View & Authenticated Control" mode: stats are publicly viewable by default, while admin actions/logs trigger an elegant security token input overlay.
+  - URL cleanup: automatically strip token parameters from the address bar after loading for cleaner sharing.
+- **Log Decoded Formatting**: Fixed binary multiplexing stream headers (unwanted gibberish symbols) at the beginning of log lines by demultiplexing stdout/stderr streams.
 
 ### Changed
 

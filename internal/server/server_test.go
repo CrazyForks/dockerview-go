@@ -14,7 +14,7 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	s := NewServer()
+	s := NewServer(nil, "")
 	if s == nil {
 		t.Fatal("NewServer returned nil")
 	}
@@ -24,7 +24,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServer_HandleData(t *testing.T) {
-	s := NewServer()
+	s := NewServer(nil, "")
 
 	// 1. Check response with nil currentData
 	req := httptest.NewRequest("GET", "/data", nil)
@@ -71,7 +71,7 @@ func TestServer_HandleData(t *testing.T) {
 }
 
 func TestServer_HandleDashboard(t *testing.T) {
-	s := NewServer()
+	s := NewServer(nil, "")
 	req := httptest.NewRequest("GET", "/dashboard", nil)
 	w := httptest.NewRecorder()
 	s.handleDashboard(w, req)
@@ -99,6 +99,7 @@ type mockFlusherResponseWriter struct {
 	flushed chan bool
 }
 
+// Flush mocks http.Flusher interface.
 func (m *mockFlusherResponseWriter) Flush() {
 	select {
 	case m.flushed <- true:
@@ -107,7 +108,7 @@ func (m *mockFlusherResponseWriter) Flush() {
 }
 
 func TestServer_HandleStream(t *testing.T) {
-	s := NewServer()
+	s := NewServer(nil, "")
 	testData := []docker.ContainerInfo{
 		{ID: "123", Name: "test-container", Status: "running"},
 	}
@@ -169,5 +170,113 @@ func TestServer_HandleStream(t *testing.T) {
 	case <-handlerDone:
 	case <-time.After(1 * time.Second):
 		t.Fatal("timed out waiting for handleStream to stop")
+	}
+}
+
+func TestServer_HandleContainerOp_NilClient(t *testing.T) {
+	s := NewServer(nil, "")
+	req := httptest.NewRequest("POST", "/api/container/op?id=123&op=start", nil)
+	w := httptest.NewRecorder()
+	s.handleContainerOp(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", resp.StatusCode)
+	}
+}
+
+func TestServer_HandleContainerOp_BadRequest(t *testing.T) {
+	s := NewServer(nil, "")
+	// Missing params
+	req := httptest.NewRequest("POST", "/api/container/op", nil)
+	w := httptest.NewRecorder()
+	s.handleContainerOp(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+
+	// Invalid method
+	req = httptest.NewRequest("GET", "/api/container/op?id=123&op=start", nil)
+	w = httptest.NewRecorder()
+	s.handleContainerOp(w, req)
+	if w.Result().StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405 Method Not Allowed, got %d", w.Result().StatusCode)
+	}
+}
+
+func TestServer_HandleContainerLogs_NilClient(t *testing.T) {
+	s := NewServer(nil, "")
+	req := httptest.NewRequest("GET", "/api/container/logs?id=123", nil)
+	w := httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", resp.StatusCode)
+	}
+}
+
+func TestServer_HandleContainerLogs_BadRequest(t *testing.T) {
+	s := NewServer(nil, "")
+	// Missing id
+	req := httptest.NewRequest("GET", "/api/container/logs", nil)
+	w := httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+
+	// Invalid method
+	req = httptest.NewRequest("POST", "/api/container/logs?id=123", nil)
+	w = httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405 Method Not Allowed, got %d", w.Result().StatusCode)
+	}
+}
+
+func TestServer_Authentication(t *testing.T) {
+	s := NewServer(nil, "my-secret-token")
+
+	// 1. Request without token
+	req := httptest.NewRequest("GET", "/api/container/logs?id=123", nil)
+	w := httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusUnauthorized {
+		t.Errorf("expected 401 StatusUnauthorized, got %d", w.Result().StatusCode)
+	}
+
+	// 2. Request with invalid token
+	req = httptest.NewRequest("GET", "/api/container/logs?id=123&token=wrong-token", nil)
+	w = httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusUnauthorized {
+		t.Errorf("expected 401 StatusUnauthorized, got %d", w.Result().StatusCode)
+	}
+
+	// 3. Request with valid token in query param
+	req = httptest.NewRequest("GET", "/api/container/logs?id=123&token=my-secret-token", nil)
+	w = httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", w.Result().StatusCode)
+	}
+
+	// 4. Request with valid token in header
+	req = httptest.NewRequest("GET", "/api/container/logs?id=123", nil)
+	req.Header.Set("X-Auth-Token", "my-secret-token")
+	w = httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", w.Result().StatusCode)
+	}
+
+	// 5. Request with valid token in Authorization header
+	req = httptest.NewRequest("GET", "/api/container/logs?id=123", nil)
+	req.Header.Set("Authorization", "Bearer my-secret-token")
+	w = httptest.NewRecorder()
+	s.handleContainerLogs(w, req)
+	if w.Result().StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", w.Result().StatusCode)
 	}
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"os"
@@ -21,6 +23,7 @@ func main() {
 	showHelp := flag.Bool("help", false, "Show help")
 	enableServer := flag.Bool("server", false, "Enable HTTP server for real-time data")
 	serverPort := flag.Int("port", 8080, "Port for HTTP server")
+	serverToken := flag.String("token", "", "Security token for HTTP server (auto-generated if empty)")
 	flag.Parse()
 
 	SetColor()
@@ -54,7 +57,23 @@ func main() {
 
 	var srv *server.Server
 	if *enableServer {
-		srv = server.NewServer()
+		token := *serverToken
+		if token == "" {
+			token = os.Getenv("DOCKERVIEW_TOKEN")
+		}
+		if token == "" {
+			bytes := make([]byte, 16)
+			if _, err := rand.Read(bytes); err == nil {
+				token = hex.EncodeToString(bytes)
+			} else {
+				token = "dockerview-secure-default"
+			}
+		}
+
+		fmt.Printf("[INFO] Web dashboard is running at http://localhost:%d/?token=%s\n", *serverPort, token)
+		fmt.Printf("[INFO] Security token: %s\n", token)
+
+		srv = server.NewServer(client, token)
 		go func() {
 			if err := srv.Start(ctx, *serverPort); err != nil {
 				fmt.Fprintf(os.Stderr, "HTTP server error: %v\n", err)
@@ -112,6 +131,8 @@ func printHelp() {
 	fmt.Println("        Enable HTTP server for real-time data")
 	fmt.Println("  -port int")
 	fmt.Println("        Port for HTTP server (default 8080)")
+	fmt.Println("  -token string")
+	fmt.Println("        Security token for HTTP server (auto-generated if empty)")
 	fmt.Println("  -help")
 	fmt.Println("        Show this help message")
 	fmt.Println("  -version")
