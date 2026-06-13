@@ -2,6 +2,8 @@
 
 A beautiful terminal-based Docker container monitoring tool built with Go and bubbletea, featuring a gorgeous real-time web dashboard.
 
+English | [中文](README_zh.md)
+
 ## Demo
 
 ![DockerView Go Demo](assets/demo.gif)
@@ -20,7 +22,7 @@ A beautiful terminal-based Docker container monitoring tool built with Go and bu
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.24+
 - Docker daemon running
 - Terminal with true color support (recommended)
 
@@ -55,7 +57,18 @@ go run ./cmd/dockerview/
 ./dockerview
 ```
 
-Press `Ctrl+C` to exit the application.
+### TUI Controls
+
+| Key         | Action            |
+| ----------- | ----------------- |
+| `↑` `↓`     | Select container  |
+| `Enter`     | Show actions      |
+| `s`         | Start container   |
+| `x`         | Stop container    |
+| `r`         | Restart container |
+| `l`         | View logs         |
+| `q` / `Esc` | Back / Exit       |
+| `Ctrl+C`    | Exit application  |
 
 ### Web Dashboard & Server Mode
 
@@ -124,8 +137,7 @@ dockerview-go/
 │   └── client_test.go        # Tests
 ├── internal/server/          # HTTP & SSE Server
 │   ├── server.go             # Server logic & API endpoints
-│   └── web/                  # Web Embed Directory
-│       └── dist/             # Precompiled React UI assets (embedded automatically)
+│   └── web/                  # Compiled React UI assets (embedded automatically)
 ├── frontend/                 # React + TypeScript Frontend Application
 │   ├── src/                  # React source files (App.tsx, index.css, main.tsx, etc.)
 │   ├── index.html            # Vite template index file
