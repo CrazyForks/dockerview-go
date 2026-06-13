@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/docker/docker/client"
@@ -91,13 +93,31 @@ func (s *Server) UpdateData(data []docker.ContainerInfo) {
 
 // Start starts the HTTP server on the specified port.
 func (s *Server) Start(ctx context.Context, port int) error {
+	webFS, _ := fs.Sub(webContent, "web")
+	fileServer := http.FileServer(http.FS(webFS))
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/stream", s.handleStream)
 	mux.HandleFunc("/data", s.handleData)
 	mux.HandleFunc("/dashboard", s.handleDashboard)
 	mux.HandleFunc("/api/container/op", s.handleContainerOp)
 	mux.HandleFunc("/api/container/logs", s.handleContainerLogs)
-	mux.HandleFunc("/", s.handleDashboard) // Also serve at root for convenience
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Try to serve static file; if not found, fall back to index.html (SPA)
+		path := strings.TrimPrefix(r.URL.Path, "/")
+		if path == "" || path == "dashboard" {
+			s.handleDashboard(w, r)
+			return
+		}
+		// Check if file exists in embedded FS
+		if f, err := webFS.(fs.ReadFileFS).Open(path); err == nil {
+			f.Close()
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+		// SPA fallback
+		s.handleDashboard(w, r)
+	})
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),

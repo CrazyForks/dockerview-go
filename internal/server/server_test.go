@@ -88,7 +88,7 @@ func TestServer_HandleDashboard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read body: %v", err)
 	}
-	if !strings.Contains(string(body), "<!DOCTYPE html>") {
+	if !strings.Contains(strings.ToLower(string(body)), "<!doctype html>") {
 		t.Errorf("expected dashboard HTML structure, got: %s", string(body))
 	}
 }

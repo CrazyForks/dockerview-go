@@ -18,8 +18,14 @@ GOMOD=$(GOCMD) mod
 .PHONY: all
 all: clean build
 
+.PHONY: build-ui
+build-ui:
+	@echo "Building UI..."
+	cd frontend && [ -d node_modules ] || npm install
+	cd frontend && npm run build
+
 .PHONY: build
-build:
+build: build-ui
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BUILD_DIR)
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/$(BINARY_NAME)
@@ -63,7 +69,7 @@ run:
 PLATFORMS=darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64
 
 .PHONY: release
-release: clean
+release: clean build-ui
 	@echo "Building release binaries..."
 	@mkdir -p $(BUILD_DIR)
 	@for platform in $(PLATFORMS); do \

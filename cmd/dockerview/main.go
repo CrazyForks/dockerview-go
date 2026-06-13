@@ -81,8 +81,6 @@ func main() {
 		}()
 	}
 
-	m := &model{dockerClient: client}
-
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -90,6 +88,25 @@ func main() {
 		<-sigChan
 		cancel()
 	}()
+
+	// In server mode without a TTY, run headless (no TUI)
+	if *enableServer && !isTTY() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				containers, err := docker.GetContainerStats(ctx, client)
+				if err == nil && srv != nil {
+					srv.UpdateData(containers)
+				}
+			}
+		}
+	}
+
+	m := &model{dockerClient: client}
 
 	go func() {
 		ticker := time.NewTicker(time.Second)
@@ -117,6 +134,14 @@ func main() {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func isTTY() bool {
+	fi, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
 }
 
 func printHelp() {
