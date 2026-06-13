@@ -123,11 +123,16 @@ dockerview-go/
 │   ├── client.go             # Docker API client
 │   └── client_test.go        # Tests
 ├── internal/server/          # HTTP & SSE Server
-│   ├── server.go             # SSE connection broadcaster and server logic
-│   └── web/                  # Web Assets
-│       └── index.html        # Embedded Premium Web Dashboard UI/UX
+│   ├── server.go             # Server logic & API endpoints
+│   └── web/                  # Web Embed Directory
+│       └── dist/             # Precompiled React UI assets (embedded automatically)
+├── frontend/                 # React + TypeScript Frontend Application
+│   ├── src/                  # React source files (App.tsx, index.css, main.tsx, etc.)
+│   ├── index.html            # Vite template index file
+│   ├── vite.config.ts        # Vite build configurations (generates output in internal/server/web)
+│   └── package.json          # Node modules, Tailwind v4 and React dependencies
 ├── .github/                  # CI/CD
-├── Makefile                  # Build commands
+├── Makefile                  # Build commands (automatically runs build-ui when building Go)
 ├── go.mod/go.sum             # Go modules
 └── README.md                 # This file
 ```

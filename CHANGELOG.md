@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 2026-06-14
+
+### Added
+
+- **React Frontend**: Rebuilt web dashboard from legacy single `index.html` into a modular React + TypeScript application (`frontend/`) using Vite, Tailwind CSS v4, and Radix UI
+  - Component architecture: `Header`, `ContainerCard`, `SummaryDashboard`, `Sparkline`, `AuthModal`, `LogsModal`
+  - Dynamic metric dashboards, SVG sparklines, custom toasts, Radix Dialog-based modals
+  - Collapsible offline grid with expand/collapse for stopped containers
+- **Go Embed Optimization**: Replaced legacy single-file cached reading with `http.FileServer` and `fs.Sub` serving compiled Vite assets from embedded filesystem
+- **Reverse Proxy Support**: Configured relative base paths (`./`) in Vite and `/dashboard` route for seamless subpath proxy integration
+- **Container Tracking**: Stateful tracker ignores already-stopped containers on startup, tracks active ones so they display correctly when stopped during session
+- **Build Integration**: Added `build-ui` target to Makefile, automated React asset compilation on standard `make build`
+
+### Changed
+
+- **Brand Assets**: Replaced all SVGs (favicon, icons, logo) with unified DockerView brand illustration — neon glow, glassmorphism gradients, radar grid background, `#38BDF8` accents
+- **Makefile**: Updated `build-ui` target to use `frontend/` directory
+- **README.md**: Updated directory tree to reflect `frontend/` structure
+- **Gitignore**: Added `dockerview` binary, `.claude/`, `.antigravity/`
+
 ## [0.1.11] - 2026-05-27
 
 ### Added
