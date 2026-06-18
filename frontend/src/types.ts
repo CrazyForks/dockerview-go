@@ -7,6 +7,8 @@ export interface Container {
   memory: string;
   blkio: string;
   network: string;
+  healthscore?: number;
+  healthstatus?: 'healthy' | 'warning' | 'dangerous';
 }
 
 export interface ToastMessage {

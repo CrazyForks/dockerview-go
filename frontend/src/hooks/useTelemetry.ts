@@ -93,6 +93,11 @@ export function useTelemetry(serverToken: string) {
   const runningCount = containers.filter(isRunning).length;
   const stoppedCount = containers.length - runningCount;
 
+  // Health status counts
+  const healthyCount = containers.filter(c => c.healthstatus === 'healthy').length;
+  const warningCount = containers.filter(c => c.healthstatus === 'warning').length;
+  const dangerousCount = containers.filter(c => c.healthstatus === 'dangerous').length;
+
   // Aggregate Stats
   const avgCpu = containers.length 
     ? (containers.reduce((acc, c) => acc + (parseFloat(c.cpu) || 0), 0) / containers.length).toFixed(1)
@@ -106,6 +111,9 @@ export function useTelemetry(serverToken: string) {
     filteredContainers,
     runningCount,
     stoppedCount,
+    healthyCount,
+    warningCount,
+    dangerousCount,
     avgCpu,
     peakMemory,
     lastUpdate,

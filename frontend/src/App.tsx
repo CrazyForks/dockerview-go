@@ -45,6 +45,9 @@ export default function App() {
     filteredContainers,
     runningCount,
     stoppedCount,
+    healthyCount,
+    warningCount,
+    dangerousCount,
     avgCpu,
     peakMemory,
     lastUpdate,
@@ -163,6 +166,9 @@ export default function App() {
           active={runningCount}
           avgCpu={avgCpu}
           peakMemory={formatBytes(peakMemory)}
+          healthyCount={healthyCount}
+          warningCount={warningCount}
+          dangerousCount={dangerousCount}
         />
 
         {/* Container Lists */}

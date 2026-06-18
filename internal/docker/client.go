@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -16,14 +17,16 @@ import (
 )
 
 type ContainerInfo struct {
-	FullID  string
-	ID      string
-	Name    string
-	Status  string
-	CPU     string
-	Memory  string
-	Blkio   string
-	Network string
+	FullID       string
+	ID           string
+	Name         string
+	Status       string
+	CPU          string
+	Memory       string
+	Blkio        string
+	Network      string
+	HealthScore  int          `json:",omitempty"`
+	HealthStatus HealthStatus `json:",omitempty"`
 }
 
 func NewClient() (*client.Client, error) {
@@ -142,16 +145,17 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 	var result []ContainerInfo
 	for _, c := range containers {
 		cpuPercent := 0.0
+		memoryPercent := 0.0
 		memoryUsage := "0 B"
 		blkioStr := "N/A"
 		networkStr := "N/A"
+		var blkio []BlkioEntry
+		var networks map[string]NetworkStats
 
 		statsData, err := cli.ContainerStatsOneShot(ctx, c.ID)
 		if err == nil {
-			var blkio []BlkioEntry
-			var networks map[string]NetworkStats
 			var parseErr error
-			cpuPercent, memoryUsage, blkio, networks, parseErr = parseStats(statsData.Body)
+			cpuPercent, memoryPercent, memoryUsage, blkio, networks, parseErr = parseStats(statsData.Body)
 			statsData.Body.Close()
 			if parseErr == nil {
 				if len(blkio) >= 2 {
@@ -175,15 +179,64 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			status = c.Status
 		}
 
+		isRunning := c.State == "running"
+
+		// Get restart count and uptime from container inspect
+		restartCount := 0
+		var uptime time.Duration
+		if inspect, err := cli.ContainerInspect(ctx, c.ID); err == nil {
+			if inspect.RestartCount > 0 {
+				restartCount = inspect.RestartCount
+			}
+			if inspect.State != nil && inspect.State.StartedAt != "" && isRunning {
+				if startedAt, err := time.Parse(time.RFC3339Nano, inspect.State.StartedAt); err == nil {
+					uptime = time.Since(startedAt)
+				}
+			}
+		}
+		// Fallback: use creation time if uptime not yet set
+		if uptime <= 0 && c.Created > 0 {
+			uptime = time.Since(time.Unix(c.Created, 0))
+		}
+
+		// Calculate disk IO rate (bytes per second)
+		var totalBlkioBytes uint64
+		for _, entry := range blkio {
+			if entry.Op == "Read" || entry.Op == "Write" {
+				totalBlkioBytes += entry.Value
+			}
+		}
+		diskIORate := CalculateAverageRate(totalBlkioBytes, uptime)
+
+		// Calculate network rate (bytes per second)
+		var totalNetBytes uint64
+		for _, net := range networks {
+			totalNetBytes += net.RxBytes + net.TxBytes
+		}
+		networkRate := CalculateAverageRate(totalNetBytes, uptime)
+
+		// Calculate health score
+		healthResult := CalculateHealthScore(
+			cpuPercent,
+			memoryPercent,
+			diskIORate,
+			networkRate,
+			restartCount,
+			uptime.Seconds(),
+			isRunning,
+		)
+
 		result = append(result, ContainerInfo{
-			FullID:  c.ID,
-			ID:      truncateID(c.ID, 12),
-			Name:    extractContainerName(c.Names),
-			Status:  status,
-			CPU:     fmt.Sprintf("%.1f%%", cpuPercent),
-			Memory:  memoryUsage,
-			Blkio:   blkioStr,
-			Network: networkStr,
+			FullID:       c.ID,
+			ID:           truncateID(c.ID, 12),
+			Name:         extractContainerName(c.Names),
+			Status:       status,
+			CPU:          fmt.Sprintf("%.1f%%", cpuPercent),
+			Memory:       memoryUsage,
+			Blkio:        blkioStr,
+			Network:      networkStr,
+			HealthScore:  healthResult.Score,
+			HealthStatus: healthResult.Status,
 		})
 	}
 
@@ -203,23 +256,51 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 		}
 
 		status := "exited"
+		var uptime time.Duration
+		restartCount := 0
 		if inspect.State != nil {
 			if inspect.State.Status != "" {
 				status = inspect.State.Status
 			} else if inspect.State.ExitCode != 0 {
 				status = fmt.Sprintf("exited (%d)", inspect.State.ExitCode)
 			}
+			if inspect.State.StartedAt != "" {
+				if startedAt, err := time.Parse(time.RFC3339Nano, inspect.State.StartedAt); err == nil {
+					if finishedAt, err := time.Parse(time.RFC3339Nano, inspect.State.FinishedAt); err == nil {
+						uptime = finishedAt.Sub(startedAt)
+					}
+				}
+			}
+			restartCount = inspect.RestartCount
+		}
+		if uptime <= 0 && inspect.Created != "" {
+			if created, err := time.Parse(time.RFC3339Nano, inspect.Created); err == nil {
+				uptime = time.Since(created)
+			}
 		}
 
+		// Calculate health score for stopped container
+		healthResult := CalculateHealthScore(
+			0.0,
+			0.0,
+			0.0,
+			0.0,
+			restartCount,
+			uptime.Seconds(),
+			false,
+		)
+
 		result = append(result, ContainerInfo{
-			FullID:  inspect.ID,
-			ID:      truncateID(inspect.ID, 12),
-			Name:    extractContainerName([]string{inspect.Name}),
-			Status:  status,
-			CPU:     "0.0%",
-			Memory:  "0 B",
-			Blkio:   "N/A",
-			Network: "N/A",
+			FullID:       inspect.ID,
+			ID:           truncateID(inspect.ID, 12),
+			Name:         extractContainerName([]string{inspect.Name}),
+			Status:       status,
+			CPU:          "0.0%",
+			Memory:       "0 B",
+			Blkio:        "N/A",
+			Network:      "N/A",
+			HealthScore:  healthResult.Score,
+			HealthStatus: healthResult.Status,
 		})
 	}
 
@@ -263,14 +344,15 @@ type statsJSON struct {
 	Networks map[string]NetworkStats `json:"networks"`
 }
 
-func parseStats(body io.Reader) (float64, string, []BlkioEntry, map[string]NetworkStats, error) {
+func parseStats(body io.Reader) (float64, float64, string, []BlkioEntry, map[string]NetworkStats, error) {
 	var stats statsJSON
 
 	if err := json.NewDecoder(body).Decode(&stats); err != nil {
-		return 0, "", nil, nil, err
+		return 0, 0, "", nil, nil, err
 	}
 
 	var cpuPercent float64
+	var memoryPercent float64
 	var memoryUsage string
 
 	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage) - float64(stats.PreCPUStats.CPUUsage.TotalUsage)
@@ -282,9 +364,13 @@ func parseStats(body io.Reader) (float64, string, []BlkioEntry, map[string]Netwo
 	}
 
 	usage := stats.MemoryStats.Usage
+	limit := stats.MemoryStats.Limit
+	if limit > 0 {
+		memoryPercent = float64(usage) / float64(limit) * 100.0
+	}
 	memoryUsage = formatBytes(usage)
 
-	return cpuPercent, memoryUsage, stats.BlockIOStats.IOServiceBytesRecursive, stats.Networks, nil
+	return cpuPercent, memoryPercent, memoryUsage, stats.BlockIOStats.IOServiceBytesRecursive, stats.Networks, nil
 }
 
 func formatBytes(bytes uint64) string {
