@@ -8,7 +8,7 @@ interface LogsProps {
   containerName: string;
   serverToken: string;
   onClose: () => void;
-  onAuthRequired: () => void;
+  onAuthRequired: (containerId: string, containerName: string) => void;
 }
 
 export function LogsModal({ containerId, containerName, serverToken, onClose, onAuthRequired }: LogsProps) {
@@ -33,7 +33,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
           }, 50);
         }
       } else if (response.status === 401) {
-        onAuthRequired();
+        onAuthRequired(containerId, containerName);
       } else {
         const err = await response.text();
         setLogsText(`Error loading logs: ${err}`);

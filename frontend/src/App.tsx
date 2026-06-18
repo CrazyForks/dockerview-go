@@ -25,7 +25,14 @@ export default function App() {
   });
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authError, setAuthError] = useState<boolean>(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  // Pending action stored as data (not a function closure) to avoid stale closure bugs.
+  // The function-closure approach captured an old performOp/handleOpenLogs with an empty
+  // serverToken, causing a second auth dialog to appear after the first token input.
+  type PendingActionType =
+    | { kind: 'op'; containerId: string; op: 'start' | 'stop' | 'restart'; containerName: string }
+    | { kind: 'logs'; containerId: string; containerName: string };
+  const [pendingAction, setPendingAction] = useState<PendingActionType | null>(null);
 
   // Modals & Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -60,13 +67,16 @@ export default function App() {
   };
 
   // Handle operation action (Start/Stop/Restart)
-  const performOp = async (containerId: string, op: 'start' | 'stop' | 'restart', name: string) => {
+  // Accepts an optional `token` param so callers can pass the latest token
+  // without relying on closure state (avoids stale-closure double-auth bug).
+  const performOp = async (containerId: string, op: 'start' | 'stop' | 'restart', name: string, token?: string) => {
+    const authToken = token ?? serverToken;
     if (!containerId) {
       showToast('Container ID is missing', 'error');
       return;
     }
-    if (!serverToken) {
-      setPendingAction(() => () => performOp(containerId, op, name));
+    if (!authToken) {
+      setPendingAction({ kind: 'op', containerId, op, containerName: name });
       setAuthError(false);
       setShowAuthModal(true);
       return;
@@ -75,7 +85,7 @@ export default function App() {
     showToast(`${op.charAt(0).toUpperCase() + op.slice(1)}ing container ${name}...`, 'info');
 
     try {
-      const response = await fetch(`${basePath}api/container/op?id=${containerId}&op=${op}&token=${serverToken}`, {
+      const response = await fetch(`${basePath}api/container/op?id=${containerId}&op=${op}&token=${authToken}`, {
         method: 'POST'
       });
 
@@ -85,7 +95,7 @@ export default function App() {
         showToast('Authentication failed: Invalid security token', 'error');
         localStorage.removeItem('dockerview_token');
         setServerToken('');
-        setPendingAction(() => () => performOp(containerId, op, name));
+        setPendingAction({ kind: 'op', containerId, op, containerName: name });
         setAuthError(true);
         setShowAuthModal(true);
       } else {
@@ -98,9 +108,11 @@ export default function App() {
   };
 
   // Open Log Modal helper
-  const handleOpenLogs = (id: string, name: string) => {
-    if (!serverToken) {
-      setPendingAction(() => () => handleOpenLogs(id, name));
+  // Accepts an optional `token` param to avoid stale-closure issues.
+  const handleOpenLogs = (id: string, name: string, token?: string) => {
+    const authToken = token ?? serverToken;
+    if (!authToken) {
+      setPendingAction({ kind: 'logs', containerId: id, containerName: name });
       setAuthError(false);
       setShowAuthModal(true);
       return;
@@ -114,11 +126,16 @@ export default function App() {
     setShowAuthModal(false);
     showToast('Token verified and saved', 'success');
     if (pendingAction) {
-      // Small timeout to let state flush
-      setTimeout(() => {
-        pendingAction();
-        setPendingAction(null);
-      }, 100);
+      // Execute the pending action using the new token directly.
+      // We pass the token explicitly instead of relying on state / closure,
+      // which ensures the action uses the correct token on the first try.
+      const action = pendingAction;
+      setPendingAction(null);
+      if (action.kind === 'op') {
+        performOp(action.containerId, action.op, action.containerName, token);
+      } else {
+        handleOpenLogs(action.containerId, action.containerName, token);
+      }
     }
   };
 
@@ -266,11 +283,11 @@ export default function App() {
           containerName={logsContainer.name}
           serverToken={serverToken}
           onClose={() => setLogsContainer(null)}
-          onAuthRequired={() => {
+          onAuthRequired={(containerId, containerName) => {
             setLogsContainer(null);
             localStorage.removeItem('dockerview_token');
             setServerToken('');
-            setPendingAction(() => () => handleOpenLogs(logsContainer.id, logsContainer.name));
+            setPendingAction({ kind: 'logs', containerId, containerName });
             setAuthError(true);
             setShowAuthModal(true);
           }}
