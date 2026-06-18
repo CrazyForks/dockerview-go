@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal } from 'lucide-react';
+import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse } from 'lucide-react';
 import type { Container } from '../types';
 import { parseSize } from '../utils';
 import { Sparkline, HighlightedText } from './Sparkline';
@@ -81,13 +81,31 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
               <HighlightedText text={container.id} query={searchQuery} />
             </div>
           </div>
-          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border text-center uppercase tracking-wider ${
-            isUp 
-              ? 'bg-success/5 text-success border-success/15' 
-              : 'bg-danger/5 text-danger border-danger/15'
-          }`}>
-            {isUp ? 'Running' : 'Stopped'}
-          </span>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            {container.healthscore !== undefined && container.healthstatus && (
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-extrabold text-[11px] uppercase tracking-wider ${
+                container.healthstatus === 'healthy'
+                  ? 'bg-success/10 text-success border-success/20'
+                  : container.healthstatus === 'warning'
+                    ? 'bg-warning/10 text-warning border-warning/20'
+                    : 'bg-danger/10 text-danger border-danger/20'
+              }`}>
+                <HeartPulse className="w-3 h-3" />
+                <span className="tabular-nums">{container.healthscore}</span>
+                <span className="text-[9px] opacity-80">
+                  {container.healthstatus === 'healthy' ? 'HEALTHY' :
+                   container.healthstatus === 'warning' ? 'WARNING' : 'DANGER'}
+                </span>
+              </div>
+            )}
+            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border text-center uppercase tracking-wider ${
+              isUp
+                ? 'bg-success/5 text-success border-success/15'
+                : 'bg-danger/5 text-danger border-danger/15'
+            }`}>
+              {isUp ? 'Running' : 'Stopped'}
+            </span>
+          </div>
         </div>
 
         {/* Metrics Area */}

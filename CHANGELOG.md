@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2026-06-18
+
+### Added
+- **Container Health Scoring**: Compute real-time health score (0-100) and status labels ("healthy", "warning", "dangerous") based on CPU load, memory utilization, Disk I/O, Network traffic, container restarts, and uptime.
+- **Health Indicators Panel**: Optimized the top dashboard summary grid into an integrated, mobile-responsive monitoring panel showing total nodes, active nodes, and health distribution with neon pulsing status indicators.
+- **Log Modal Enhancements**: Added support for log keyword searching (grep), log level filters (ALL, DEBUG, INFO, WARN, ERROR), customizable tail line counts, search match highlighting, and instant log file downloading.
+
+### Fixed
+- **Double Auth Dialog Bug**: Resolved stale closure state issue where container action actions or opening logs would trigger the authentication window twice.
+- **Stopped Container Tracking**: Redesigned stopped containers listing to only show containers stopped via dockerview during the current session, preventing dashboard clutter from old historical inactive containers.
+- **Mobile Adaptations**: Enhanced spacing and sizes of dialog content boxes and headers on small screens to ensure all elements (e.g. close buttons) remain perfectly visible and aligned.
+- **iOS Zoom Prevention**: Added font-size rules (16px) for input and select controls in mobile views to block automatic Safari page-zoom.
+- **Dialog A11y Warnings**: Suppressed Radix UI console warnings by ensuring proper description bindings on dialog contents.
+
 ## [0.1.12] - 2026-06-14
 
 ### Added
