@@ -7,13 +7,13 @@ import (
 
 func TestCalculateHealthScore_RunningHealthy(t *testing.T) {
 	result := CalculateHealthScore(
-		20.0,   // CPU 20% - normal
-		30.0,   // Memory 30% - normal
-		10e6,   // Disk IO 10 MB/s - normal
-		50e6,   // Network 50 MB/s - normal
-		0,      // 0 restarts
-		7200,   // 2 hours uptime
-		true,   // running
+		20.0, // CPU 20% - normal
+		30.0, // Memory 30% - normal
+		10e6, // Disk IO 10 MB/s - normal
+		50e6, // Network 50 MB/s - normal
+		0,    // 0 restarts
+		7200, // 2 hours uptime
+		true, // running
 	)
 
 	if result.Score < 80 {
@@ -40,13 +40,13 @@ func TestCalculateHealthScore_StoppedContainer(t *testing.T) {
 
 func TestCalculateHealthScore_HighCPUMemory(t *testing.T) {
 	result := CalculateHealthScore(
-		90.0,   // CPU 90% - very high
-		85.0,   // Memory 85% - very high
-		10e6,   // Disk IO normal
-		50e6,   // Network normal
-		0,      // 0 restarts
-		7200,   // 2 hours uptime
-		true,   // running
+		90.0, // CPU 90% - very high
+		85.0, // Memory 85% - very high
+		10e6, // Disk IO normal
+		50e6, // Network normal
+		0,    // 0 restarts
+		7200, // 2 hours uptime
+		true, // running
 	)
 
 	// High CPU + high memory should reduce score to warning range
@@ -64,13 +64,13 @@ func TestCalculateHealthScore_HighCPUMemory(t *testing.T) {
 
 func TestCalculateHealthScore_ManyRestarts(t *testing.T) {
 	result := CalculateHealthScore(
-		30.0,   // CPU normal
-		40.0,   // Memory normal
-		5e6,    // Disk IO normal
-		10e6,   // Network normal
-		5,      // 5 restarts
-		7200,   // 2 hours uptime
-		true,   // running
+		30.0, // CPU normal
+		40.0, // Memory normal
+		5e6,  // Disk IO normal
+		10e6, // Network normal
+		5,    // 5 restarts
+		7200, // 2 hours uptime
+		true, // running
 	)
 
 	// 5 restarts * 5 penalty = 25 points lost from restart dimension
@@ -84,13 +84,13 @@ func TestCalculateHealthScore_ManyRestarts(t *testing.T) {
 
 func TestCalculateHealthScore_ShortUptime(t *testing.T) {
 	result := CalculateHealthScore(
-		20.0,  // CPU normal
-		30.0,  // Memory normal
-		1e6,   // Disk IO normal
-		5e6,   // Network normal
-		0,     // 0 restarts
-		30,    // 30 seconds uptime - very short
-		true,  // running
+		20.0, // CPU normal
+		30.0, // Memory normal
+		1e6,  // Disk IO normal
+		5e6,  // Network normal
+		0,    // 0 restarts
+		30,   // 30 seconds uptime - very short
+		true, // running
 	)
 
 	// Short uptime should reduce uptime score significantly
@@ -105,13 +105,13 @@ func TestCalculateHealthScore_ShortUptime(t *testing.T) {
 
 func TestCalculateHealthScore_HighDiskIO(t *testing.T) {
 	result := CalculateHealthScore(
-		30.0,      // CPU normal
-		40.0,      // Memory normal
-		300e6,     // Disk IO 300 MB/s - very high
-		10e6,      // Network normal
-		0,         // 0 restarts
-		3600,      // 1 hour uptime
-		true,      // running
+		30.0,  // CPU normal
+		40.0,  // Memory normal
+		300e6, // Disk IO 300 MB/s - very high
+		10e6,  // Network normal
+		0,     // 0 restarts
+		3600,  // 1 hour uptime
+		true,  // running
 	)
 
 	if result.Breakdown.DiskIO >= WeightDiskIO {
@@ -122,13 +122,13 @@ func TestCalculateHealthScore_HighDiskIO(t *testing.T) {
 
 func TestCalculateHealthScore_LowNetwork(t *testing.T) {
 	result := CalculateHealthScore(
-		30.0,   // CPU normal
-		40.0,   // Memory normal
-		1e6,    // Disk IO normal
-		500,    // Network 500 B/s - very low
-		0,      // 0 restarts
-		3600,   // 1 hour uptime
-		true,   // running
+		30.0, // CPU normal
+		40.0, // Memory normal
+		1e6,  // Disk IO normal
+		500,  // Network 500 B/s - very low
+		0,    // 0 restarts
+		3600, // 1 hour uptime
+		true, // running
 	)
 
 	// Very low network should get ~70% of network weight
@@ -167,10 +167,10 @@ func TestGetHealthStatus(t *testing.T) {
 
 func TestScoreCPU(t *testing.T) {
 	tests := []struct {
-		cpu   float64
+		cpu      float64
 		minScore int
 		maxScore int
-		desc    string
+		desc     string
 	}{
 		{10, WeightCPU, WeightCPU, "low CPU should be full score"},
 		{50, WeightCPU, WeightCPU, "50% CPU should be full score"},
@@ -238,13 +238,13 @@ func TestHealthBreakdown_SumMatchesScore(t *testing.T) {
 	// The total score should approximately equal the sum of breakdown scores
 	// (minor rounding differences allowed)
 	result := CalculateHealthScore(
-		25.0,  // CPU
-		35.0,  // Memory
-		5e6,   // Disk IO
-		10e6,  // Network
-		1,     // 1 restart
-		1800,  // 30 minutes
-		true,  // running
+		25.0, // CPU
+		35.0, // Memory
+		5e6,  // Disk IO
+		10e6, // Network
+		1,    // 1 restart
+		1800, // 30 minutes
+		true, // running
 	)
 
 	breakdownSum := result.Breakdown.CPU + result.Breakdown.Memory +

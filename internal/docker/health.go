@@ -16,20 +16,20 @@ const (
 
 // HealthScoreThresholds defines the score boundaries for health status levels.
 const (
-	HealthyThreshold   = 80
-	WarningThreshold   = 50
-	MaxHealthScore     = 100
-	MinHealthScore     = 0
+	HealthyThreshold = 80
+	WarningThreshold = 50
+	MaxHealthScore   = 100
+	MinHealthScore   = 0
 )
 
 // HealthWeights defines the weight of each dimension in the total score (sum = 100).
 const (
-	WeightCPU        = 20
-	WeightMemory     = 20
-	WeightDiskIO     = 15
-	WeightNetwork    = 15
-	WeightRestart    = 15
-	WeightUptime     = 15
+	WeightCPU     = 20
+	WeightMemory  = 20
+	WeightDiskIO  = 15
+	WeightNetwork = 15
+	WeightRestart = 15
+	WeightUptime  = 15
 )
 
 // Health thresholds for each dimension.
@@ -43,27 +43,27 @@ const (
 	MemoryWarningMax = 80.0
 
 	// Disk IO thresholds (bytes per second) - total read+write
-	DiskIONormalMax  = 50 * 1024 * 1024   // 50 MB/s
-	DiskIOWarningMax = 200 * 1024 * 1024  // 200 MB/s
+	DiskIONormalMax  = 50 * 1024 * 1024  // 50 MB/s
+	DiskIOWarningMax = 200 * 1024 * 1024 // 200 MB/s
 
 	// Network thresholds (bytes per second) - total rx+tx
-	NetworkLowThreshold    = 1024          // 1 KB/s (too low for active containers)
-	NetworkNormalMax       = 100 * 1024 * 1024 // 100 MB/s
-	NetworkWarningMax      = 500 * 1024 * 1024 // 500 MB/s
+	NetworkLowThreshold = 1024              // 1 KB/s (too low for active containers)
+	NetworkNormalMax    = 100 * 1024 * 1024 // 100 MB/s
+	NetworkWarningMax   = 500 * 1024 * 1024 // 500 MB/s
 
 	// Restart count thresholds
 	RestartPenaltyPerCount = 5 // points deducted per restart
 
 	// Uptime thresholds (seconds)
-	UptimeStable     = 3600   // 1 hour - fully stable
-	UptimeModerate   = 600    // 10 minutes
-	UptimeMinimal    = 60     // 1 minute
+	UptimeStable   = 3600 // 1 hour - fully stable
+	UptimeModerate = 600  // 10 minutes
+	UptimeMinimal  = 60   // 1 minute
 )
 
 // HealthResult holds the computed health score and status.
 type HealthResult struct {
-	Score  int
-	Status HealthStatus
+	Score     int
+	Status    HealthStatus
 	Breakdown HealthBreakdown
 }
 
