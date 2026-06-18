@@ -240,7 +240,7 @@ export default function App() {
           <div className="flex flex-wrap justify-between items-center gap-5">
             <div className="flex items-center gap-3.5">
               <span>© 2026 DockerView</span>
-              <span className="bg-white/3 border border-white/5 px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.12</span>
+              <span className="bg-white/3 border border-white/5 px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.13</span>
             </div>
             <div className="flex items-center gap-6 font-semibold">
               <div className="flex items-center gap-1.5">
