@@ -15,7 +15,7 @@ export function AuthModal({ onVerify, onClose, hasError }: AuthProps) {
     <Dialog.Root open={true} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000] transition-all" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#101117]/85 border border-white/8 rounded-3xl p-9 w-[90%] max-w-[420px] shadow-2xl backdrop-blur-3xl z-[2001] text-center animate-modal-in focus:outline-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#101117]/85 border border-white/8 rounded-3xl p-6 sm:p-9 w-[92%] sm:w-[90%] max-w-[420px] shadow-2xl backdrop-blur-3xl z-[2001] text-center animate-modal-in focus:outline-none">
           <div className="flex justify-center items-center mb-6 text-accent-cyan">
             <ShieldAlert className="w-9 h-9" />
           </div>
@@ -33,7 +33,7 @@ export function AuthModal({ onVerify, onClose, hasError }: AuthProps) {
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && onVerify(inputVal.trim())}
-              className="w-full bg-white/3 focus:bg-white/5 border border-white/8 focus:border-accent-cyan/40 rounded-xl py-3.5 px-4 text-white text-center font-mono text-sm outline-none transition-all"
+              className="w-full bg-white/3 focus:bg-white/5 border border-white/8 focus:border-accent-cyan/40 rounded-xl py-3.5 px-4 text-white text-center font-mono text-[16px] sm:text-sm outline-none transition-all"
               autoFocus
             />
           </div>
