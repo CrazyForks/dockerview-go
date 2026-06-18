@@ -266,11 +266,19 @@ func (s *Server) handleContainerLogs(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	tail := r.URL.Query().Get("tail")
+	grep := r.URL.Query().Get("grep")
+	level := r.URL.Query().Get("level")
+
 	if id == "" {
 		http.Error(w, "Missing 'id' parameter", http.StatusBadRequest)
 		return
 	}
+
+	// Validate and normalize tail parameter
+	validTails := map[string]bool{"100": true, "500": true, "1000": true, "5000": true}
 	if tail == "" {
+		tail = "100"
+	} else if !validTails[tail] {
 		tail = "100"
 	}
 
@@ -290,7 +298,64 @@ func (s *Server) handleContainerLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer reader.Close()
 
+	// Read all logs into memory for filtering
+	logsBytes, err := io.ReadAll(reader)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read logs: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Apply filters
+	filtered := filterLogs(string(logsBytes), grep, level)
+
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = io.Copy(w, reader)
+	_, _ = w.Write([]byte(filtered))
+}
+
+// filterLogs applies grep (keyword) and level filters to log content.
+func filterLogs(logs string, grep string, level string) string {
+	if grep == "" && level == "" {
+		return logs
+	}
+
+	lines := strings.Split(logs, "\n")
+	var filtered []string
+
+	// Build level keyword map for matching
+	levelKeywords := map[string][]string{
+		"ERROR": {"ERROR", "error", "Error", "ERR", "err", "FATAL", "fatal"},
+		"WARN":  {"WARN", "warn", "WARN", "Warning", "warning"},
+		"INFO":  {"INFO", "info", "Info"},
+		"DEBUG": {"DEBUG", "debug", "Debug"},
+	}
+
+	keywords := levelKeywords[strings.ToUpper(level)]
+
+	for _, line := range lines {
+		// Level filter
+		if level != "" && keywords != nil {
+			matched := false
+			for _, kw := range keywords {
+				if strings.Contains(line, kw) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+		}
+
+		// Grep filter (case-insensitive)
+		if grep != "" {
+			if !strings.Contains(strings.ToLower(line), strings.ToLower(grep)) {
+				continue
+			}
+		}
+
+		filtered = append(filtered, line)
+	}
+
+	return strings.Join(filtered, "\n")
 }
