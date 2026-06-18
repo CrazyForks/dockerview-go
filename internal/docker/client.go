@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sync"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -92,23 +93,81 @@ func detectUnixSockets() []string {
 	return sockets
 }
 
+var (
+	stoppedByUs = make(map[string]bool)
+	stoppedMu   sync.RWMutex
+)
+
+func TrackStopped(containerID string) {
+	stoppedMu.Lock()
+	stoppedByUs[containerID] = true
+	stoppedMu.Unlock()
+}
+
+func UntrackStopped(containerID string) {
+	stoppedMu.Lock()
+	delete(stoppedByUs, containerID)
+	stoppedMu.Unlock()
+}
+
+func GetStoppedIDs() []string {
+	stoppedMu.RLock()
+	defer stoppedMu.RUnlock()
+	var ids []string
+	for id := range stoppedByUs {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo, error) {
 	containers, err := cli.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
+	runningMap := make(map[string]bool)
+	for _, c := range containers {
+		runningMap[c.ID] = true
+	}
+
+	// Clean up stoppedByUs if any of those containers are now running
+	stoppedIDs := GetStoppedIDs()
+	for _, id := range stoppedIDs {
+		if runningMap[id] {
+			UntrackStopped(id)
+		}
+	}
+
 	var result []ContainerInfo
 	for _, c := range containers {
-		statsData, err := cli.ContainerStatsOneShot(ctx, c.ID)
-		if err != nil {
-			continue
-		}
+		cpuPercent := 0.0
+		memoryUsage := "0 B"
+		blkioStr := "N/A"
+		networkStr := "N/A"
 
-		cpuPercent, memoryUsage, blkio, networks, err := parseStats(statsData.Body)
-		statsData.Body.Close()
-		if err != nil {
-			continue
+		statsData, err := cli.ContainerStatsOneShot(ctx, c.ID)
+		if err == nil {
+			var blkio []BlkioEntry
+			var networks map[string]NetworkStats
+			var parseErr error
+			cpuPercent, memoryUsage, blkio, networks, parseErr = parseStats(statsData.Body)
+			statsData.Body.Close()
+			if parseErr == nil {
+				if len(blkio) >= 2 {
+					blkioStr = fmt.Sprintf("%s / %s", formatBytes(blkio[0].Value), formatBytes(blkio[1].Value))
+				} else if len(blkio) == 1 {
+					blkioStr = fmt.Sprintf("%s / 0 B", formatBytes(blkio[0].Value))
+				}
+				var totalRx, totalTx uint64
+				for _, net := range networks {
+					totalRx += net.RxBytes
+					totalTx += net.TxBytes
+				}
+				networkStr = fmt.Sprintf("↓%s ↑%s",
+					formatBytes(totalRx),
+					formatBytes(totalTx))
+			}
 		}
 
 		status := c.State
@@ -117,31 +176,50 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 		}
 
 		result = append(result, ContainerInfo{
-			FullID: c.ID,
-			ID:     truncateID(c.ID, 12),
-			Name:   extractContainerName(c.Names),
-			Status: status,
-			CPU:    fmt.Sprintf("%.1f%%", cpuPercent),
-			Memory: memoryUsage,
-			Blkio: func() string {
-				blkioStr := "N/A"
-				if len(blkio) >= 2 {
-					blkioStr = fmt.Sprintf("%s / %s", formatBytes(blkio[0].Value), formatBytes(blkio[1].Value))
-				} else if len(blkio) == 1 {
-					blkioStr = fmt.Sprintf("%s / 0 B", formatBytes(blkio[0].Value))
-				}
-				return blkioStr
-			}(),
-			Network: func() string {
-				var totalRx, totalTx uint64
-				for _, net := range networks {
-					totalRx += net.RxBytes
-					totalTx += net.TxBytes
-				}
-				return fmt.Sprintf("↓%s ↑%s",
-					formatBytes(totalRx),
-					formatBytes(totalTx))
-			}(),
+			FullID:  c.ID,
+			ID:      truncateID(c.ID, 12),
+			Name:    extractContainerName(c.Names),
+			Status:  status,
+			CPU:     fmt.Sprintf("%.1f%%", cpuPercent),
+			Memory:  memoryUsage,
+			Blkio:   blkioStr,
+			Network: networkStr,
+		})
+	}
+
+	// Append containers stopped during this execution
+	stoppedIDs = GetStoppedIDs()
+	for _, id := range stoppedIDs {
+		inspect, err := cli.ContainerInspect(ctx, id)
+		if err != nil {
+			// Container might be deleted, remove from tracking
+			UntrackStopped(id)
+			continue
+		}
+
+		if inspect.State != nil && inspect.State.Running {
+			UntrackStopped(id)
+			continue
+		}
+
+		status := "exited"
+		if inspect.State != nil {
+			if inspect.State.Status != "" {
+				status = inspect.State.Status
+			} else if inspect.State.ExitCode != 0 {
+				status = fmt.Sprintf("exited (%d)", inspect.State.ExitCode)
+			}
+		}
+
+		result = append(result, ContainerInfo{
+			FullID:  inspect.ID,
+			ID:      truncateID(inspect.ID, 12),
+			Name:    extractContainerName([]string{inspect.Name}),
+			Status:  status,
+			CPU:     "0.0%",
+			Memory:  "0 B",
+			Blkio:   "N/A",
+			Network: "N/A",
 		})
 	}
 
@@ -263,11 +341,23 @@ func truncateID(id string, length int) string {
 func ContainerOp(ctx context.Context, cli *client.Client, containerID, op string) error {
 	switch op {
 	case "start":
-		return cli.ContainerStart(ctx, containerID, container.StartOptions{})
+		err := cli.ContainerStart(ctx, containerID, container.StartOptions{})
+		if err == nil {
+			UntrackStopped(containerID)
+		}
+		return err
 	case "stop":
-		return cli.ContainerStop(ctx, containerID, container.StopOptions{})
+		err := cli.ContainerStop(ctx, containerID, container.StopOptions{})
+		if err == nil {
+			TrackStopped(containerID)
+		}
+		return err
 	case "restart":
-		return cli.ContainerRestart(ctx, containerID, container.StopOptions{})
+		err := cli.ContainerRestart(ctx, containerID, container.StopOptions{})
+		if err == nil {
+			UntrackStopped(containerID)
+		}
+		return err
 	default:
 		return fmt.Errorf("unknown operation: %s", op)
 	}
