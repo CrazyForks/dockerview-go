@@ -141,16 +141,16 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
     URL.revokeObjectURL(url);
   };
 
-  const selectClass = "bg-white/3 hover:bg-white/5 border border-white/8 focus:border-accent-cyan/40 rounded-lg py-1.5 px-3 text-white text-[16px] sm:text-[12px] outline-none transition-all cursor-pointer appearance-none";
+  const selectClass = "bg-surface-2 hover:bg-surface-4 border border-surface-5 focus:border-accent-cyan/40 rounded-lg py-1.5 px-3 text-text text-[16px] sm:text-[12px] outline-none transition-all cursor-pointer appearance-none";
 
   return (
     <Dialog.Root open={true} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000] transition-all" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#101117]/85 border border-white/8 rounded-3xl w-[95%] sm:w-[90%] max-w-[900px] h-[85%] sm:h-[80%] max-h-[90vh] sm:max-h-[650px] flex flex-col shadow-2xl backdrop-blur-3xl z-[1001] animate-modal-in focus:outline-none">
-          <div className="p-4 px-5 sm:p-5 sm:px-7 border-b border-white/6 flex justify-between items-center gap-4">
+        <Dialog.Overlay className="fixed inset-0 z-[1000] transition-all" style={{ backgroundColor: 'var(--theme-modal-overlay)', backdropFilter: 'blur(8px)' }} />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-modal-bg border border-surface-5 rounded-3xl w-[95%] sm:w-[90%] max-w-[900px] h-[85%] sm:h-[80%] max-h-[90vh] sm:max-h-[650px] flex flex-col shadow-2xl backdrop-blur-3xl z-[1001] animate-modal-in focus:outline-none">
+          <div className="p-4 px-5 sm:p-5 sm:px-7 border-b border-border-light flex justify-between items-center gap-4">
             <div className="text-left min-w-0 flex-1">
-              <Dialog.Title className="text-sm sm:text-lg font-bold text-white m-0 truncate" title={t('logs.title', { name: containerName })}>
+              <Dialog.Title className="text-sm sm:text-lg font-bold text-text m-0 truncate" title={t('logs.title', { name: containerName })}>
                 {t('logs.title', { name: containerName })}
               </Dialog.Title>
               <Dialog.Description className="sr-only">
@@ -164,20 +164,20 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
             <div className="flex gap-2.5 shrink-0">
               <button
                 onClick={fetchLogs}
-                className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-surface-2 hover:bg-surface-5 border border-border-light hover:border-border-default text-text-dim hover:text-text flex items-center justify-center transition-all cursor-pointer"
                 title={t('logs.refreshTooltip')}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleDownload}
-                className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-surface-2 hover:bg-surface-5 border border-border-light hover:border-border-default text-text-dim hover:text-text flex items-center justify-center transition-all cursor-pointer"
                 title={t('logs.downloadTooltip')}
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
               <Dialog.Close
-                className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-surface-2 hover:bg-surface-5 border border-border-light hover:border-border-default text-text-dim hover:text-text flex items-center justify-center transition-all cursor-pointer"
                 title={t('logs.closeTooltip')}
               >
                 <X className="w-3.5 h-3.5" />
@@ -186,7 +186,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
           </div>
 
           {/* Toolbar */}
-          <div className="px-4 py-2.5 sm:px-6 sm:py-3 border-b border-white/6 flex flex-wrap gap-2.5 sm:gap-3 items-center bg-black/10">
+          <div className="px-4 py-2.5 sm:px-6 sm:py-3 border-b border-border-light flex flex-wrap gap-2.5 sm:gap-3 items-center bg-black/10">
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-dim" />
@@ -195,7 +195,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('logs.searchPlaceholder')}
-                className="w-full bg-white/3 hover:bg-white/5 focus:bg-white/5 border border-white/8 focus:border-accent-cyan/40 rounded-lg py-1.5 pl-8 pr-3 text-white text-[16px] sm:text-[12px] outline-none transition-all placeholder:text-text-dim"
+                className="w-full bg-surface-2 hover:bg-surface-4 focus:bg-surface-4 border border-surface-5 focus:border-accent-cyan/40 rounded-lg py-1.5 pl-8 pr-3 text-text text-[16px] sm:text-[12px] outline-none transition-all placeholder:text-text-dim"
               />
             </div>
 
@@ -209,7 +209,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
                 title={t('logs.levelTitle')}
               >
                 {LEVEL_OPTIONS.map((level) => (
-                  <option key={level} value={level} className="bg-[#1a1b23]">
+                  <option key={level} value={level} className="bg-surface-1 text-text">
                     {level}
                   </option>
                 ))}
@@ -226,7 +226,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
                 title={t('logs.linesTitle')}
               >
                 {TAIL_OPTIONS.map((n) => (
-                  <option key={n} value={n} className="bg-[#1a1b23]">
+                  <option key={n} value={n} className="bg-surface-1 text-text">
                     {n}
                   </option>
                 ))}
@@ -236,14 +236,21 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
 
           <div
             ref={viewerRef}
-            className="grow p-4 sm:p-6 md:p-7 overflow-y-auto min-h-0 bg-black/20 rounded-b-3xl"
+            className="grow p-4 sm:p-6 md:p-7 overflow-y-auto min-h-0 rounded-b-3xl"
+            style={{ backgroundColor: 'var(--theme-log-bg)' }}
           >
             {debouncedSearch.trim() ? (
-              <div className="m-0 font-mono text-[12px] leading-relaxed text-white/85 text-left whitespace-pre-wrap break-all">
+              <div
+                className="m-0 font-mono text-[12px] leading-relaxed text-left whitespace-pre-wrap break-all"
+                style={{ color: 'var(--theme-log-text)' }}
+              >
                 {highlightedLogs}
               </div>
             ) : (
-              <pre className="m-0 font-mono text-[12px] leading-relaxed text-white/85 text-left whitespace-pre-wrap break-all">
+              <pre
+                className="m-0 font-mono text-[12px] leading-relaxed text-left whitespace-pre-wrap break-all"
+                style={{ color: 'var(--theme-log-text)' }}
+              >
                 {logsText}
               </pre>
             )}

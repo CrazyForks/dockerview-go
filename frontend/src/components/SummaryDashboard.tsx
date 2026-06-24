@@ -19,7 +19,7 @@ export function SummaryDashboard({ total, active, avgCpu, peakMemory, healthyCou
       <div className="flex-1 pb-4 md:pb-0 md:pr-6 flex items-center justify-around gap-4">
         <div className="text-left">
           <div className="text-[10px] font-bold text-text-dim uppercase tracking-[1.5px] mb-1">{t('summary.totalNodes')}</div>
-          <div className="text-3xl font-extrabold text-white">{total}</div>
+          <div className="text-3xl font-extrabold text-text">{total}</div>
         </div>
         <div className="h-10 w-[1px] bg-white/5 hidden sm:block" />
         <div className="text-left">
@@ -60,7 +60,7 @@ export function SummaryDashboard({ total, active, avgCpu, peakMemory, healthyCou
       <div className="flex-[1.2] pt-4 md:pt-0 md:pl-6 flex items-center justify-around gap-4">
         <div className="text-left">
           <div className="text-[10px] font-bold text-text-dim uppercase tracking-[1.5px] mb-1">{t('summary.avgLoad')}</div>
-          <div className="text-2xl font-extrabold text-white flex items-baseline gap-0.5">
+          <div className="text-2xl font-extrabold text-text flex items-baseline gap-0.5">
             {avgCpu}
             <span className="text-xs font-bold text-text-dim">%</span>
           </div>
@@ -68,7 +68,7 @@ export function SummaryDashboard({ total, active, avgCpu, peakMemory, healthyCou
         <div className="h-10 w-[1px] bg-white/5 hidden sm:block" />
         <div className="text-left">
           <div className="text-[10px] font-bold text-text-dim uppercase tracking-[1.5px] mb-1">{t('summary.peakMemory')}</div>
-          <div className="text-2xl font-extrabold text-white">{peakMemory}</div>
+          <div className="text-2xl font-extrabold text-text">{peakMemory}</div>
         </div>
       </div>
     </div>

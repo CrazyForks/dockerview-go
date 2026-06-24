@@ -4,6 +4,7 @@ import type { ToastMessage } from './types';
 import { formatBytes, basePath } from './utils';
 import { useTelemetry } from './hooks/useTelemetry';
 import { useTranslation } from './i18n';
+import { useTheme } from './hooks/useTheme';
 import { Header } from './components/Header';
 import { SummaryDashboard } from './components/SummaryDashboard';
 import { ContainerCard } from './components/ContainerCard';
@@ -12,6 +13,7 @@ import { LogsModal } from './components/LogsModal';
 
 export default function App() {
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
 
   // Auth state
   const [serverToken, setServerToken] = useState<string>(() => {
@@ -150,9 +152,9 @@ export default function App() {
     <div className="relative min-h-screen">
       <div className="mesh" />
       <div className="max-w-[1600px] mx-auto px-[30px] py-[50px]">
-        
+
         {/* Floating Controller Panel */}
-        <Header 
+        <Header
           totalCount={containers.length}
           runningCount={runningCount}
           stoppedCount={stoppedCount}
@@ -162,10 +164,12 @@ export default function App() {
           setSortKey={setSortKey}
           filterKey={filterKey}
           setFilterKey={setFilterKey}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Aggregate Stats Dashboard */}
-        <SummaryDashboard 
+        <SummaryDashboard
           total={containers.length}
           active={runningCount}
           avgCpu={avgCpu}
@@ -181,13 +185,13 @@ export default function App() {
             {/* Active grid */}
             {filteredContainers.some(isRunning) && (
               <div>
-                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-white/4">
+                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
                   {t('app.activeDeployments')}
                 </div>
                 <div className="grid-container">
                   {filteredContainers.filter(isRunning).map(c => (
-                    <ContainerCard 
-                      key={c.id} 
+                    <ContainerCard
+                      key={c.id}
                       container={c}
                       history={historyData[c.id]}
                       onOp={performOp}
@@ -202,7 +206,7 @@ export default function App() {
             {/* Offline grid */}
             {filteredContainers.some(c => !isRunning(c)) && (
               <div>
-                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-white/4">
+                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
                   {t('app.offlineInstances')} ({filteredContainers.filter(c => !isRunning(c)).length})
                 </div>
                 <div className="grid-container">
@@ -210,8 +214,8 @@ export default function App() {
                     .filter(c => !isRunning(c))
                     .slice(0, showAllOffline ? undefined : 6)
                     .map(c => (
-                      <ContainerCard 
-                        key={c.id} 
+                      <ContainerCard
+                        key={c.id}
                         container={c}
                         history={historyData[c.id]}
                         onOp={performOp}
@@ -224,7 +228,7 @@ export default function App() {
                   <div className="flex justify-center mt-8">
                     <button
                       onClick={() => setShowAllOffline(!showAllOffline)}
-                      className="px-5 py-2.5 rounded-xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 text-text-dim hover:text-white font-bold text-[11px] tracking-wider uppercase transition-all cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl bg-surface-1 hover:bg-surface-4 border border-border-light hover:border-border-default text-text-dim hover:text-text font-bold text-[11px] tracking-wider uppercase transition-all cursor-pointer"
                     >
                     {showAllOffline ? t('app.showLess') : t('app.showAllOffline', { count: filteredContainers.filter(c => !isRunning(c)).length })}
                     </button>
@@ -244,7 +248,7 @@ export default function App() {
           <div className="flex flex-wrap justify-between items-center gap-5">
             <div className="flex items-center gap-3.5">
               <span>{t('app.footerCopyright')}</span>
-              <span className="bg-white/3 border border-white/5 px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.14</span>
+              <span className="bg-surface-2 border border-border-light px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.14</span>
             </div>
             <div className="flex items-center gap-6 font-semibold">
               <div className="flex items-center gap-1.5">
@@ -261,7 +265,7 @@ export default function App() {
                 href="https://github.com/zsuroy/dockerview-go"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 text-text-dim hover:text-white bg-white/2 hover:bg-white/5 border border-white/3 hover:border-white/10 px-3.5 py-1.5 rounded-lg transition-all font-semibold text-[11px]"
+                className="flex items-center gap-1.5 text-text-dim hover:text-text bg-surface-1 hover:bg-surface-4 border border-border-subtle hover:border-border-default px-3.5 py-1.5 rounded-lg transition-all font-semibold text-[11px]"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
@@ -276,7 +280,7 @@ export default function App() {
 
       {/* Auth Token Prompt Modal */}
       {showAuthModal && (
-        <AuthModal 
+        <AuthModal
           onVerify={handleVerifyToken}
           onClose={() => {
             setShowAuthModal(false);
@@ -288,7 +292,7 @@ export default function App() {
 
       {/* Logs Viewing Modal */}
       {logsContainer && (
-        <LogsModal 
+        <LogsModal
           containerId={logsContainer.id}
           containerName={logsContainer.name}
           serverToken={serverToken}
@@ -307,11 +311,11 @@ export default function App() {
       {/* Dynamic Toast Messages */}
       <div className="fixed bottom-[30px] right-[30px] flex flex-col gap-2.5 z-[2000]">
         {toasts.map(t => (
-          <div 
-            key={t.id} 
-            className={`flex items-center gap-2.5 px-4.5 py-3 rounded-xl bg-[#101117]/85 border border-white/8 text-white font-semibold text-[13px] shadow-lg backdrop-blur-md animate-modal-in min-w-[260px] ${
-              t.type === 'success' ? 'border-l-4 border-l-success' : 
-              t.type === 'error' ? 'border-l-4 border-l-danger' : 
+          <div
+            key={t.id}
+            className={`flex items-center gap-2.5 px-4.5 py-3 rounded-xl bg-modal-bg border border-surface-5 text-text font-semibold text-[13px] shadow-lg backdrop-blur-md animate-modal-in min-w-[260px] ${
+              t.type === 'success' ? 'border-l-4 border-l-success' :
+              t.type === 'error' ? 'border-l-4 border-l-danger' :
               'border-l-4 border-l-accent-cyan'
             }`}
           >

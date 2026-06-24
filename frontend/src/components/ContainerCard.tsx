@@ -26,25 +26,38 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
     const card = cardRef.current;
     if (!wrapper || !card) return;
 
+    const getDefaultShadow = () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      return dark
+        ? '0 10px 30px rgba(0,0,0,0.3)'
+        : '0 8px 25px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)';
+    };
+
+    // Set initial shadow
+    card.style.boxShadow = getDefaultShadow();
+
     const handleMouseMove = (e: MouseEvent) => {
       const rect = wrapper.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       card.style.setProperty('--mouse-x', `${x}px`);
       card.style.setProperty('--mouse-y', `${y}px`);
-      
+
       const rotX = -((y / rect.height) - 0.5) * 8;
       const rotY = ((x / rect.width) - 0.5) * 8;
-      
+
       card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-2px)`;
-      const glowColor = isUp ? 'rgba(0, 255, 170, 0.06)' : 'rgba(255, 0, 85, 0.06)';
-      card.style.boxShadow = `0 15px 35px rgba(0,0,0,0.5), 0 0 15px ${glowColor}`;
+      const glowColor = isUp ? 'rgba(0, 255, 170, 0.08)' : 'rgba(255, 0, 85, 0.08)';
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      card.style.boxShadow = dark
+        ? `0 15px 35px rgba(0,0,0,0.5), 0 0 15px ${glowColor}`
+        : `0 15px 35px rgba(0,0,0,0.15), 0 0 20px ${glowColor}`;
     };
 
     const handleMouseLeave = () => {
       card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)';
-      card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+      card.style.boxShadow = getDefaultShadow();
     };
 
     wrapper.addEventListener('mousemove', handleMouseMove);
@@ -69,14 +82,14 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
 
   return (
     <div ref={wrapperRef} className="card-wrapper">
-      <div 
-        ref={cardRef} 
+      <div
+        ref={cardRef}
         className="tilt-card glass-card rounded-[24px] p-7 shadow-lg flex flex-col justify-start"
       >
         {/* Header */}
         <div className="flex justify-between items-start gap-4 mb-6 z-10 relative">
           <div className="text-left">
-            <h3 className="text-lg font-bold text-white break-all">
+            <h3 className="text-lg font-bold text-text break-all">
               <HighlightedText text={container.name} query={searchQuery} />
             </h3>
             <div className="text-[11px] text-text-dim font-mono mt-1">
@@ -116,17 +129,17 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
           <div className="flex items-center gap-4">
             <div className="flex flex-col w-[72px] shrink-0 text-left">
               <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.cpuLoad')}</span>
-              <span className="text-[13px] font-extrabold mt-0.5 tabular-nums">{container.cpu}</span>
+              <span className="text-[13px] font-extrabold mt-0.5 tabular-nums text-text">{container.cpu}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
-              <div className="h-[5px] bg-white/4 rounded-full grow overflow-hidden relative">
-                <div 
+              <div className="h-[5px] bg-surface-3 rounded-full grow overflow-hidden relative">
+                <div
                   className={`h-full rounded-full transition-all duration-500 ${getBarColorClass(cpuPercent)}`}
                   style={{ width: `${cpuPercent}%` }}
                 />
               </div>
               <div className="w-[90px] h-[18px] shrink-0 opacity-85">
-                <Sparkline data={history?.cpu || [0,0]} color="#00f2ff" />
+                <Sparkline data={history?.cpu || [0,0]} color="var(--color-accent-cyan)" />
               </div>
             </div>
           </div>
@@ -135,24 +148,24 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
           <div className="flex items-center gap-4">
             <div className="flex flex-col w-[72px] shrink-0 text-left">
               <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.ramUsage')}</span>
-              <span className="text-[13px] font-extrabold mt-0.5 tabular-nums">{container.memory}</span>
+              <span className="text-[13px] font-extrabold mt-0.5 tabular-nums text-text">{container.memory}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
-              <div className="h-[5px] bg-white/4 rounded-full grow overflow-hidden relative">
-                <div 
+              <div className="h-[5px] bg-surface-3 rounded-full grow overflow-hidden relative">
+                <div
                   className={`h-full rounded-full transition-all duration-500 ${getBarColorClass(ramPercent, true)}`}
                   style={{ width: `${ramPercent}%` }}
                 />
               </div>
               <div className="w-[90px] h-[18px] shrink-0 opacity-85">
-                <Sparkline data={history?.ram || [0,0]} color="#d500f9" />
+                <Sparkline data={history?.ram || [0,0]} color="var(--color-accent-pink)" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer Metrics */}
-        <div className="flex justify-between pt-4 border-t border-white/3 text-[11px] text-text-dim z-10 relative">
+        <div className="flex justify-between pt-4 border-t border-border-subtle text-[11px] text-text-dim z-10 relative">
           <span className="flex items-center gap-1">
             <ArrowDownUp className="w-3 h-3 text-text-dim" />
             <span>{container.network || '0 B / 0 B'}</span>

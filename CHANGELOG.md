@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Multi-language Support (i18n)**: Implemented full internationalization support on the web dashboard. Added translation configuration and context hooks to switch dynamically between English and Chinese.
 - **Localized UI & Tooltips**: Fully translated headers, dashboard telemetry summary cards, container metric items, operation actions, log viewer UI, and interactive dialogs/tooltips.
+- **Theme Toggle (Light/Dark Mode)**: Added switching between dark and light themes with automatic system color-scheme preference detection and a custom persistent toggle button in the header. Optimized all metrics cards, logs viewports, and action dialogs for clear text contrast and visibility under the light theme.
 
 ## [0.1.13] - 2026-06-18
 
