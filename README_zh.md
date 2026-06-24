@@ -19,6 +19,7 @@
 - **Token 安全认证**：控制 API 和日志接口受 Token 保护，自动生成安全密钥，支持访客只读模式，Token 存储于 localStorage
 - **多语言支持**：Web 仪表盘支持中英文切换，可在顶部导航栏一键切换语言。
 - **主题切换**：Web 仪表盘支持深色/浅色主题切换（支持自动检测系统主题偏好）。
+- **一键 Web 更新**：在页脚版本标牌旁直接触发基于浏览器的自动更新。系统将自动查询 GitHub 发布的最新 Release 版本，智能识别安装方式（`go install` 或 `binary`），安全执行原子替换，并实时推送详细的进度消息。
 - **状态颜色标识**：运行中为绿色，已停止/退出为红色
 - **CPU 告警**：CPU 使用率超过 50% 时红色高亮
 - **自动检测**：自动检测 Docker Socket（支持 Unix Socket、WSL、Colima、OrbStack、Podman、Rancher Desktop 等）

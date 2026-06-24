@@ -14,7 +14,7 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	if s == nil {
 		t.Fatal("NewServer returned nil")
 	}
@@ -24,7 +24,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServer_HandleData(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 
 	// 1. Check response with nil currentData
 	req := httptest.NewRequest("GET", "/data", nil)
@@ -71,7 +71,7 @@ func TestServer_HandleData(t *testing.T) {
 }
 
 func TestServer_HandleDashboard(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	req := httptest.NewRequest("GET", "/dashboard", nil)
 	w := httptest.NewRecorder()
 	s.handleDashboard(w, req)
@@ -108,7 +108,7 @@ func (m *mockFlusherResponseWriter) Flush() {
 }
 
 func TestServer_HandleStream(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	testData := []docker.ContainerInfo{
 		{ID: "123", Name: "test-container", Status: "running"},
 	}
@@ -174,7 +174,7 @@ func TestServer_HandleStream(t *testing.T) {
 }
 
 func TestServer_HandleContainerOp_NilClient(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	req := httptest.NewRequest("POST", "/api/container/op?id=123&op=start", nil)
 	w := httptest.NewRecorder()
 	s.handleContainerOp(w, req)
@@ -186,7 +186,7 @@ func TestServer_HandleContainerOp_NilClient(t *testing.T) {
 }
 
 func TestServer_HandleContainerOp_BadRequest(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	// Missing params
 	req := httptest.NewRequest("POST", "/api/container/op", nil)
 	w := httptest.NewRecorder()
@@ -205,7 +205,7 @@ func TestServer_HandleContainerOp_BadRequest(t *testing.T) {
 }
 
 func TestServer_HandleContainerLogs_NilClient(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	req := httptest.NewRequest("GET", "/api/container/logs?id=123", nil)
 	w := httptest.NewRecorder()
 	s.handleContainerLogs(w, req)
@@ -217,7 +217,7 @@ func TestServer_HandleContainerLogs_NilClient(t *testing.T) {
 }
 
 func TestServer_HandleContainerLogs_BadRequest(t *testing.T) {
-	s := NewServer(nil, "")
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
 	// Missing id
 	req := httptest.NewRequest("GET", "/api/container/logs", nil)
 	w := httptest.NewRecorder()
@@ -236,7 +236,7 @@ func TestServer_HandleContainerLogs_BadRequest(t *testing.T) {
 }
 
 func TestServer_Authentication(t *testing.T) {
-	s := NewServer(nil, "my-secret-token")
+	s := NewServer(nil, "my-secret-token", "0.1.15", "unknown", "unknown")
 
 	// 1. Request without token
 	req := httptest.NewRequest("GET", "/api/container/logs?id=123", nil)

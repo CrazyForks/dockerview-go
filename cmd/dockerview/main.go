@@ -73,7 +73,7 @@ func main() {
 		fmt.Printf("[INFO] Web dashboard is running at http://localhost:%d/?token=%s\n", *serverPort, token)
 		fmt.Printf("[INFO] Security token: %s\n", token)
 
-		srv = server.NewServer(client, token)
+		srv = server.NewServer(client, token, Version, Commit, Date)
 		go func() {
 			if err := srv.Start(ctx, *serverPort); err != nil {
 				fmt.Fprintf(os.Stderr, "HTTP server error: %v\n", err)

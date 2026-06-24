@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { RefreshCcw } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { RefreshCcw, Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import type { ToastMessage } from './types';
 import { formatBytes, basePath } from './utils';
 import { useTelemetry } from './hooks/useTelemetry';
@@ -11,6 +11,17 @@ import { ContainerCard } from './components/ContainerCard';
 import { AuthModal } from './components/AuthModal';
 import { LogsModal } from './components/LogsModal';
 
+interface VersionInfo {
+  current_version: string;
+  latest_version: string;
+  update_available: boolean;
+  install_method: string;
+  commit: string;
+  build_date: string;
+}
+
+type UpgradeStatus = 'idle' | 'upgrading' | 'success' | 'error';
+
 export default function App() {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
@@ -21,7 +32,6 @@ export default function App() {
     const tokenFromUrl = urlParams.get('token');
     if (tokenFromUrl) {
       localStorage.setItem('dockerview_token', tokenFromUrl);
-      // Clean query string
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
       return tokenFromUrl;
@@ -36,13 +46,28 @@ export default function App() {
   // serverToken, causing a second auth dialog to appear after the first token input.
   type PendingActionType =
     | { kind: 'op'; containerId: string; op: 'start' | 'stop' | 'restart'; containerName: string }
-    | { kind: 'logs'; containerId: string; containerName: string };
+    | { kind: 'logs'; containerId: string; containerName: string }
+    | { kind: 'upgrade' };
   const [pendingAction, setPendingAction] = useState<PendingActionType | null>(null);
 
   // Modals & Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [logsContainer, setLogsContainer] = useState<{ id: string; name: string } | null>(null);
   const [showAllOffline, setShowAllOffline] = useState<boolean>(false);
+
+  // Version & Upgrade state
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>('idle');
+  const [upgradeMessage, setUpgradeMessage] = useState<string>('');
+  const upgradeStatusRef = useRef<UpgradeStatus>('idle');
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const serverTokenRef = useRef(serverToken);
+  serverTokenRef.current = serverToken;
+
+  const setUpgradeStatusSync = (status: UpgradeStatus) => {
+    upgradeStatusRef.current = status;
+    setUpgradeStatus(status);
+  };
 
   // Custom hook for telemetry
   const {
@@ -66,13 +91,105 @@ export default function App() {
     isRunning
   } = useTelemetry(serverToken);
 
-  const showToast = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
+  const showToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
     const id = Date.now() + Math.random();
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
-  };
+    }, 4000);
+  }, []);
+
+  // Fetch version info
+  const fetchVersionInfo = useCallback(() => {
+    fetch(`${basePath}api/version`)
+      .then(resp => resp.ok ? resp.json() : null)
+      .then((data: VersionInfo | null) => {
+        if (data) {
+          setVersionInfo(prev => {
+            if (upgradeStatusRef.current === 'success') return prev;
+            return data;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchVersionInfo();
+    const interval = setInterval(fetchVersionInfo, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchVersionInfo]);
+
+  // Handle upgrade
+  const handleUpgrade = useCallback((token?: string) => {
+    const authToken = token ?? serverTokenRef.current;
+    if (!authToken) {
+      setPendingAction({ kind: 'upgrade' });
+      setAuthError(false);
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (upgradeStatusRef.current === 'upgrading') return;
+
+    // Close any existing EventSource
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    setUpgradeStatusSync('upgrading');
+    const startMsg = t('app.upgradeToastStarting');
+    setUpgradeMessage(startMsg);
+    showToast(startMsg, 'info');
+
+    const url = `${basePath}api/upgrade?token=${encodeURIComponent(authToken)}`;
+    const es = new EventSource(url);
+    eventSourceRef.current = es;
+
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.status === 'success') {
+          setUpgradeStatusSync('success');
+          const msg = t('app.upgradeToastSuccess');
+          setUpgradeMessage(msg);
+          showToast(msg, 'success');
+          es.close();
+          eventSourceRef.current = null;
+        } else if (data.status === 'error') {
+          setUpgradeStatusSync('error');
+          const msg = t('app.upgradeToastFailed', { error: data.message });
+          setUpgradeMessage(msg);
+          showToast(msg, 'error');
+          es.close();
+          eventSourceRef.current = null;
+        } else if (data.status === 'downloading') {
+          const msg = t('app.upgradeToastDownloading');
+          setUpgradeMessage(msg);
+          showToast(msg, 'info');
+        } else if (data.status === 'applying') {
+          const msg = t('app.upgradeToastApplying');
+          setUpgradeMessage(msg);
+          showToast(msg, 'info');
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+
+    es.onerror = () => {
+      if (upgradeStatusRef.current !== 'success' && upgradeStatusRef.current !== 'error') {
+        setUpgradeStatusSync('error');
+        const msg = t('app.upgradeToastConnectionLost');
+        setUpgradeMessage(msg);
+        showToast(msg, 'error');
+      }
+      es.close();
+      eventSourceRef.current = null;
+    };
+  }, [showToast, t]);
 
   // Handle operation action (Start/Stop/Restart)
   // Accepts an optional `token` param so callers can pass the latest token
@@ -142,8 +259,10 @@ export default function App() {
       setPendingAction(null);
       if (action.kind === 'op') {
         performOp(action.containerId, action.op, action.containerName, token);
-      } else {
+      } else if (action.kind === 'logs') {
         handleOpenLogs(action.containerId, action.containerName, token);
+      } else if (action.kind === 'upgrade') {
+        handleUpgrade(token);
       }
     }
   };
@@ -230,7 +349,7 @@ export default function App() {
                       onClick={() => setShowAllOffline(!showAllOffline)}
                       className="px-5 py-2.5 rounded-xl bg-surface-1 hover:bg-surface-4 border border-border-light hover:border-border-default text-text-dim hover:text-text font-bold text-[11px] tracking-wider uppercase transition-all cursor-pointer"
                     >
-                    {showAllOffline ? t('app.showLess') : t('app.showAllOffline', { count: filteredContainers.filter(c => !isRunning(c)).length })}
+                      {showAllOffline ? t('app.showLess') : t('app.showAllOffline', { count: filteredContainers.filter(c => !isRunning(c)).length })}
                     </button>
                   </div>
                 )}
@@ -248,7 +367,45 @@ export default function App() {
           <div className="flex flex-wrap justify-between items-center gap-5">
             <div className="flex items-center gap-3.5">
               <span>{t('app.footerCopyright')}</span>
-              <span className="bg-surface-2 border border-border-light px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.14</span>
+              <span className="bg-surface-2 border border-border-light px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">
+                {versionInfo?.current_version
+                  ? (versionInfo.current_version.toLowerCase().startsWith('v')
+                      ? versionInfo.current_version
+                      : `v${versionInfo.current_version}`)
+                  : '...'}
+              </span>
+              {versionInfo?.update_available && upgradeStatus === 'idle' && (
+                <button
+                  onClick={() => handleUpgrade()}
+                  className="flex items-center gap-1.5 px-2 py-0.5 bg-accent-cyan/10 hover:bg-accent-cyan/20 border border-accent-cyan/30 hover:border-accent-cyan/50 rounded font-mono font-bold text-[10px] text-accent-cyan cursor-pointer transition-all animate-pulse group"
+                  title={t('header.upgradeAvailableTooltip', { version: versionInfo.latest_version })}
+                >
+                  <Download className="w-2.5 h-2.5 group-hover:translate-y-[-1px] transition-transform" />
+                  <span>{t('header.upgradeAvailable', { version: versionInfo.latest_version })}</span>
+                </button>
+              )}
+              {upgradeStatus === 'upgrading' && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent-cyan/10 border border-accent-cyan/30 rounded font-mono font-bold text-[10px] text-accent-cyan animate-pulse">
+                  <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                  <span>{t('header.upgradeUpgrading')}</span>
+                </div>
+              )}
+              {upgradeStatus === 'success' && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-success/10 border border-success/30 rounded font-mono font-bold text-[10px] text-success" title={upgradeMessage}>
+                  <CheckCircle className="w-2.5 h-2.5" />
+                  <span>{t('app.footerUpgradeSuccess')}</span>
+                </div>
+              )}
+              {upgradeStatus === 'error' && (
+                <button
+                  onClick={() => handleUpgrade()}
+                  className="flex items-center gap-1.5 px-2 py-0.5 bg-danger/10 hover:bg-danger/20 border border-danger/30 rounded font-mono font-bold text-[10px] text-danger cursor-pointer transition-all"
+                  title={upgradeMessage}
+                >
+                  <AlertCircle className="w-2.5 h-2.5" />
+                  <span>{t('header.upgradeFailed')}</span>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-6 font-semibold">
               <div className="flex items-center gap-1.5">
