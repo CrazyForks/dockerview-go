@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse } from 'lucide-react';
+import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse, Command } from 'lucide-react';
 import type { Container } from '../types';
 import { parseSize } from '../utils';
 import { Sparkline, HighlightedText } from './Sparkline';
@@ -10,10 +10,11 @@ interface ContainerCardProps {
   history?: { cpu: number[]; ram: number[] };
   onOp: (id: string, op: 'start' | 'stop' | 'restart', name: string) => Promise<void>;
   onLogs: (id: string, name: string) => void;
+  onExec: (id: string, name: string) => void;
   searchQuery: string;
 }
 
-export function ContainerCard({ container, history, onOp, onLogs, searchQuery }: ContainerCardProps) {
+export function ContainerCard({ container, history, onOp, onLogs, onExec, searchQuery }: ContainerCardProps) {
   const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -243,6 +244,15 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
             >
               <Play className="w-3 h-3" />
               {t('container.btnStart')}
+            </button>
+          )}
+          {isUp && (
+            <button
+              onClick={() => onExec(container.fullid, container.name)}
+              className="action-btn btn-exec"
+            >
+              <Command className="w-3 h-3" />
+              {t('container.btnExec')}
             </button>
           )}
           <button

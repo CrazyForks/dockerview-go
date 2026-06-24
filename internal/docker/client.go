@@ -537,3 +537,50 @@ func GetContainerLogs(ctx context.Context, cli *client.Client, containerID, tail
 
 	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
+
+// ExecResult holds the result of command execution
+type ExecResult struct {
+	ExitCode int    `json:"exit_code"`
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+}
+
+// ContainerExec executes a command inside a running container and returns stdout/stderr.
+func ContainerExec(ctx context.Context, cli *client.Client, containerID string, cmd []string) (ExecResult, error) {
+	var result ExecResult
+
+	options := container.ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          cmd,
+	}
+
+	resp, err := cli.ContainerExecCreate(ctx, containerID, options)
+	if err != nil {
+		return result, err
+	}
+
+	attachResp, err := cli.ContainerExecAttach(ctx, resp.ID, container.ExecStartOptions{})
+	if err != nil {
+		return result, err
+	}
+	defer attachResp.Close()
+
+	var stdout, stderr bytes.Buffer
+	_, err = stdcopy.StdCopy(&stdout, &stderr, attachResp.Reader)
+	if err != nil {
+		return result, err
+	}
+
+	inspectResp, err := cli.ContainerExecInspect(ctx, resp.ID)
+	if err != nil {
+		return result, err
+	}
+
+	result.ExitCode = inspectResp.ExitCode
+	result.Stdout = stdout.String()
+	result.Stderr = stderr.String()
+
+	return result, nil
+}
+

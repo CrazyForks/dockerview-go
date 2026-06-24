@@ -112,6 +112,7 @@ func (s *Server) Start(ctx context.Context, port int) error {
 	mux.HandleFunc("/dashboard", s.handleDashboard)
 	mux.HandleFunc("/api/container/op", s.handleContainerOp)
 	mux.HandleFunc("/api/container/logs", s.handleContainerLogs)
+	mux.HandleFunc("/api/container/exec", s.handleContainerExec)
 	mux.HandleFunc("/api/version", s.handleVersion)
 	mux.HandleFunc("/api/upgrade", s.handleUpgrade)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -455,9 +456,81 @@ func (s *Server) handleUpgrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	method := version.DetectInstallMethod()
-	// Use a detached context with timeout for the actual upgrade so that
+	// Use a detached context with timeout for the upgrade so that
 	// client disconnection does not interrupt a binary replacement.
 	upgradeCtx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	version.DoUpgrade(upgradeCtx, method, sendUpgradeEvent)
+}
+
+func (s *Server) handleContainerExec(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(w, r) {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Missing 'id' parameter", http.StatusBadRequest)
+		return
+	}
+
+	var reqBody struct {
+		Cmd interface{} `json:"cmd"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	var cmd []string
+	switch v := reqBody.Cmd.(type) {
+	case string:
+		if strings.TrimSpace(v) == "" {
+			http.Error(w, "Empty command", http.StatusBadRequest)
+			return
+		}
+		cmd = []string{"sh", "-c", v}
+	case []interface{}:
+		for _, item := range v {
+			if str, ok := item.(string); ok {
+				if strings.TrimSpace(str) != "" {
+					cmd = append(cmd, str)
+				}
+			}
+		}
+	default:
+		http.Error(w, "Invalid 'cmd' parameter (must be string or array of strings)", http.StatusBadRequest)
+		return
+	}
+
+	if len(cmd) == 0 {
+		http.Error(w, "Empty command", http.StatusBadRequest)
+		return
+	}
+
+	s.mu.RLock()
+	cli := s.dockerClient
+	s.mu.RUnlock()
+
+	if cli == nil {
+		http.Error(w, "Docker client not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	result, err := docker.ContainerExec(r.Context(), cli, id, cmd)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to execute command: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
 }

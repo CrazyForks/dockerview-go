@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **One-Click Web Upgrade**: Added browser-based self-upgrade functionality next to the version badge in the footer, which queries GitHub releases, detects the installation type (`go_install` or `binary`), replaces the running binary atomically via `selfupdate` or triggers a background Go toolchain compile, and streams step-by-step progress events in real-time.
 - **Container Port Mappings Visualization**: Render container port bindings and exposed ports inside each telemetry card on the web dashboard. Standard exposed ports display in clean neutral badges; bound port mappings are visualized in clickable hyperlinks (e.g. `8080 → 80/tcp`) pointing directly to their mapped browser host URL.
+- **Container Command Execution (Exec)**: Introduced an interactive command execution (exec) modal in the web dashboard. Users can execute arbitrary shell commands inside running containers under secure token authentication. Includes interactive output streams (separated stdout/stderr styling), exit code visualization, instant output clipboard copying, and customizable template shortcuts (e.g. directory listings, process tree, env variables).
 
 ## [0.1.14] - 2026-06-24
 

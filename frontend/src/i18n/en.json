@@ -36,7 +36,27 @@
     "healthHealthy": "HEALTHY",
     "healthWarning": "WARNING",
     "healthDanger": "DANGER",
-    "ports": "PORTS"
+    "ports": "PORTS",
+    "btnExec": "Exec"
+  },
+  "exec": {
+    "title": "Execute Command: {{name}}",
+    "placeholder": "Enter command, e.g. ls -la",
+    "btnRun": "Execute",
+    "running": "Executing command...",
+    "exitCode": "Exit Code: {{code}}",
+    "noOutput": "No output",
+    "quickTemplates": "Quick Templates",
+    "copyOutput": "Copy Output",
+    "outputCopied": "Output copied to clipboard!",
+    "subtitle": "ID: {{id}} | Run commands inside this running container",
+    "emptyHint": "Enter a command above or click a quick template to execute",
+    "tmplDirList": "Directory List",
+    "tmplEnvVars": "Environment Variables",
+    "tmplDiskUsage": "Disk Usage",
+    "tmplCurrentUser": "Current User",
+    "tmplNetworkConfig": "Network Config",
+    "tmplProcessList": "Process List"
   },
   "auth": {
     "title": "Authentication Required",

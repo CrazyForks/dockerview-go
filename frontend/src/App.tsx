@@ -10,6 +10,7 @@ import { SummaryDashboard } from './components/SummaryDashboard';
 import { ContainerCard } from './components/ContainerCard';
 import { AuthModal } from './components/AuthModal';
 import { LogsModal } from './components/LogsModal';
+import { ExecModal } from './components/ExecModal';
 
 interface VersionInfo {
   current_version: string;
@@ -47,12 +48,14 @@ export default function App() {
   type PendingActionType =
     | { kind: 'op'; containerId: string; op: 'start' | 'stop' | 'restart'; containerName: string }
     | { kind: 'logs'; containerId: string; containerName: string }
+    | { kind: 'exec'; containerId: string; containerName: string }
     | { kind: 'upgrade' };
   const [pendingAction, setPendingAction] = useState<PendingActionType | null>(null);
 
   // Modals & Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [logsContainer, setLogsContainer] = useState<{ id: string; name: string } | null>(null);
+  const [execContainer, setExecContainer] = useState<{ id: string; name: string } | null>(null);
   const [showAllOffline, setShowAllOffline] = useState<boolean>(false);
 
   // Version & Upgrade state
@@ -246,6 +249,19 @@ export default function App() {
     setLogsContainer({ id, name });
   };
 
+  // Open Exec Modal helper
+  // Accepts an optional `token` param to avoid stale-closure issues.
+  const handleOpenExec = (id: string, name: string, token?: string) => {
+    const authToken = token ?? serverToken;
+    if (!authToken) {
+      setPendingAction({ kind: 'exec', containerId: id, containerName: name });
+      setAuthError(false);
+      setShowAuthModal(true);
+      return;
+    }
+    setExecContainer({ id, name });
+  };
+
   const handleVerifyToken = (token: string) => {
     setServerToken(token);
     localStorage.setItem('dockerview_token', token);
@@ -261,6 +277,8 @@ export default function App() {
         performOp(action.containerId, action.op, action.containerName, token);
       } else if (action.kind === 'logs') {
         handleOpenLogs(action.containerId, action.containerName, token);
+      } else if (action.kind === 'exec') {
+        handleOpenExec(action.containerId, action.containerName, token);
       } else if (action.kind === 'upgrade') {
         handleUpgrade(token);
       }
@@ -315,6 +333,7 @@ export default function App() {
                       history={historyData[c.id]}
                       onOp={performOp}
                       onLogs={handleOpenLogs}
+                      onExec={handleOpenExec}
                       searchQuery={searchQuery}
                     />
                   ))}
@@ -339,6 +358,7 @@ export default function App() {
                         history={historyData[c.id]}
                         onOp={performOp}
                         onLogs={handleOpenLogs}
+                        onExec={handleOpenExec}
                         searchQuery={searchQuery}
                       />
                     ))}
@@ -459,6 +479,24 @@ export default function App() {
             localStorage.removeItem('dockerview_token');
             setServerToken('');
             setPendingAction({ kind: 'logs', containerId, containerName });
+            setAuthError(true);
+            setShowAuthModal(true);
+          }}
+        />
+      )}
+
+      {/* Command Exec Modal */}
+      {execContainer && (
+        <ExecModal
+          containerId={execContainer.id}
+          containerName={execContainer.name}
+          serverToken={serverToken}
+          onClose={() => setExecContainer(null)}
+          onAuthRequired={(containerId, containerName) => {
+            setExecContainer(null);
+            localStorage.removeItem('dockerview_token');
+            setServerToken('');
+            setPendingAction({ kind: 'exec', containerId, containerName });
             setAuthError(true);
             setShowAuthModal(true);
           }}

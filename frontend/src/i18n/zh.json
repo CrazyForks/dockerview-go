@@ -36,7 +36,27 @@
     "healthHealthy": "健康",
     "healthWarning": "警告",
     "healthDanger": "危险",
-    "ports": "端口映射"
+    "ports": "端口映射",
+    "btnExec": "执行命令"
+  },
+  "exec": {
+    "title": "执行命令：{{name}}",
+    "placeholder": "输入要执行的命令，例如 ls -la",
+    "btnRun": "执行",
+    "running": "正在执行命令...",
+    "exitCode": "退出码：{{code}}",
+    "noOutput": "无输出内容",
+    "quickTemplates": "常用命令模板",
+    "copyOutput": "复制输出",
+    "outputCopied": "输出已复制到剪贴板！",
+    "subtitle": "ID: {{id}} | 在此运行中的容器内执行命令",
+    "emptyHint": "在上方输入命令或点击常用模板进行执行",
+    "tmplDirList": "列出目录",
+    "tmplEnvVars": "环境变量",
+    "tmplDiskUsage": "磁盘占用",
+    "tmplCurrentUser": "当前用户",
+    "tmplNetworkConfig": "网络配置",
+    "tmplProcessList": "进程列表"
   },
   "auth": {
     "title": "需要身份验证",

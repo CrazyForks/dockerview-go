@@ -280,3 +280,66 @@ func TestServer_Authentication(t *testing.T) {
 		t.Errorf("expected 503 Service Unavailable, got %d", w.Result().StatusCode)
 	}
 }
+
+func TestServer_HandleContainerExec_NilClient(t *testing.T) {
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
+	body := strings.NewReader(`{"cmd": "ls -la"}`)
+	req := httptest.NewRequest("POST", "/api/container/exec?id=123", body)
+	w := httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 Service Unavailable, got %d", resp.StatusCode)
+	}
+}
+
+func TestServer_HandleContainerExec_BadRequest(t *testing.T) {
+	s := NewServer(nil, "", "0.1.15", "unknown", "unknown")
+
+	// 1. Missing id
+	body := strings.NewReader(`{"cmd": "ls -la"}`)
+	req := httptest.NewRequest("POST", "/api/container/exec", body)
+	w := httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+
+	// 2. Invalid method
+	body = strings.NewReader(`{"cmd": "ls -la"}`)
+	req = httptest.NewRequest("GET", "/api/container/exec?id=123", body)
+	w = httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+	if w.Result().StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405 Method Not Allowed, got %d", w.Result().StatusCode)
+	}
+
+	// 3. Invalid body
+	body = strings.NewReader(`{invalid-json}`)
+	req = httptest.NewRequest("POST", "/api/container/exec?id=123", body)
+	w = httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+
+	// 4. Invalid cmd type
+	body = strings.NewReader(`{"cmd": 123}`)
+	req = httptest.NewRequest("POST", "/api/container/exec?id=123", body)
+	w = httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+
+	// 5. Empty command string
+	body = strings.NewReader(`{"cmd": ""}`)
+	req = httptest.NewRequest("POST", "/api/container/exec?id=123", body)
+	w = httptest.NewRecorder()
+	s.handleContainerExec(w, req)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
+	}
+}
+
