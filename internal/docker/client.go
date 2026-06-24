@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +17,13 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 )
+
+type PortMapping struct {
+	IP          string `json:"ip,omitempty"`
+	PrivatePort uint16 `json:"private_port"`
+	PublicPort  uint16 `json:"public_port,omitempty"`
+	Type        string `json:"type"`
+}
 
 type ContainerInfo struct {
 	FullID       string
@@ -25,8 +34,9 @@ type ContainerInfo struct {
 	Memory       string
 	Blkio        string
 	Network      string
-	HealthScore  int          `json:",omitempty"`
-	HealthStatus HealthStatus `json:",omitempty"`
+	HealthScore  int           `json:",omitempty"`
+	HealthStatus HealthStatus  `json:",omitempty"`
+	Ports        []PortMapping `json:"ports"`
 }
 
 func NewClient() (*client.Client, error) {
@@ -226,6 +236,16 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			isRunning,
 		)
 
+		var ports []PortMapping
+		for _, p := range c.Ports {
+			ports = append(ports, PortMapping{
+				IP:          p.IP,
+				PrivatePort: p.PrivatePort,
+				PublicPort:  p.PublicPort,
+				Type:        p.Type,
+			})
+		}
+
 		result = append(result, ContainerInfo{
 			FullID:       c.ID,
 			ID:           truncateID(c.ID, 12),
@@ -237,6 +257,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			Network:      networkStr,
 			HealthScore:  healthResult.Score,
 			HealthStatus: healthResult.Status,
+			Ports:        ports,
 		})
 	}
 
@@ -290,6 +311,43 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			false,
 		)
 
+		var ports []PortMapping
+		if inspect.NetworkSettings != nil && inspect.NetworkSettings.Ports != nil {
+			for port, bindings := range inspect.NetworkSettings.Ports {
+				parts := strings.Split(string(port), "/")
+				var privPort uint16
+				proto := "tcp"
+				if len(parts) > 0 {
+					if p, err := strconv.Atoi(parts[0]); err == nil {
+						privPort = uint16(p)
+					}
+				}
+				if len(parts) > 1 {
+					proto = parts[1]
+				}
+
+				if len(bindings) == 0 {
+					ports = append(ports, PortMapping{
+						PrivatePort: privPort,
+						Type:        proto,
+					})
+				} else {
+					for _, b := range bindings {
+						var pubPort uint16
+						if p, err := strconv.Atoi(b.HostPort); err == nil {
+							pubPort = uint16(p)
+						}
+						ports = append(ports, PortMapping{
+							IP:          b.HostIP,
+							PrivatePort: privPort,
+							PublicPort:  pubPort,
+							Type:        proto,
+						})
+					}
+				}
+			}
+		}
+
 		result = append(result, ContainerInfo{
 			FullID:       inspect.ID,
 			ID:           truncateID(inspect.ID, 12),
@@ -301,6 +359,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			Network:      "N/A",
 			HealthScore:  healthResult.Score,
 			HealthStatus: healthResult.Status,
+			Ports:        ports,
 		})
 	}
 

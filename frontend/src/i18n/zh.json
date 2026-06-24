@@ -35,7 +35,8 @@
     "btnLogs": "日志",
     "healthHealthy": "健康",
     "healthWarning": "警告",
-    "healthDanger": "危险"
+    "healthDanger": "危险",
+    "ports": "端口映射"
   },
   "auth": {
     "title": "需要身份验证",

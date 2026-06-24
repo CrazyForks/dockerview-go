@@ -35,7 +35,8 @@
     "btnLogs": "Logs",
     "healthHealthy": "HEALTHY",
     "healthWarning": "WARNING",
-    "healthDanger": "DANGER"
+    "healthDanger": "DANGER",
+    "ports": "PORTS"
   },
   "auth": {
     "title": "Authentication Required",
