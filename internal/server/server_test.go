@@ -342,4 +342,3 @@ func TestServer_HandleContainerExec_BadRequest(t *testing.T) {
 		t.Errorf("expected 400 Bad Request, got %d", w.Result().StatusCode)
 	}
 }
-
