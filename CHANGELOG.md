@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2026-06-24
+
+### Added
+- **Multi-language Support (i18n)**: Implemented full internationalization support on the web dashboard. Added translation configuration and context hooks to switch dynamically between English and Chinese.
+- **Localized UI & Tooltips**: Fully translated headers, dashboard telemetry summary cards, container metric items, operation actions, log viewer UI, and interactive dialogs/tooltips.
+
 ## [0.1.13] - 2026-06-18
 
 ### Added

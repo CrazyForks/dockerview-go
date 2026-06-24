@@ -1,0 +1,77 @@
+{
+  "header": {
+    "title": "DockerView",
+    "subtitle": "Go",
+    "liveTelemetry": "LIVE TELEMETRY",
+    "filterAll": "ALL",
+    "filterRunning": "RUNNING",
+    "filterStopped": "STOPPED",
+    "searchPlaceholder": "Search infrastructure nodes...",
+    "sortBy": "SORT BY",
+    "sortName": "NAME",
+    "sortCpu": "CPU",
+    "sortRam": "RAM"
+  },
+  "summary": {
+    "totalNodes": "Total Nodes",
+    "active": "Active",
+    "avgLoad": "Avg Load",
+    "peakMemory": "Peak Memory",
+    "containerHealth": "Container Health"
+  },
+  "container": {
+    "statusRunning": "Running",
+    "statusStopped": "Stopped",
+    "cpuLoad": "CPU LOAD",
+    "ramUsage": "RAM USAGE",
+    "btnStop": "Stop",
+    "btnRestart": "Restart",
+    "btnStart": "Start",
+    "btnLogs": "Logs",
+    "healthHealthy": "HEALTHY",
+    "healthWarning": "WARNING",
+    "healthDanger": "DANGER"
+  },
+  "auth": {
+    "title": "Authentication Required",
+    "description": "Please enter the security token printed in the terminal when starting dockerview.",
+    "placeholder": "Security Token",
+    "verifyBtn": "Verify Token",
+    "invalidToken": "Invalid Security Token"
+  },
+  "logs": {
+    "title": "Logs: {{name}}",
+    "loading": "Loading logs...",
+    "noOutput": "No log output",
+    "errorLoading": "Error loading logs: {{error}}",
+    "connectionError": "Failed to connect to server: {{error}}",
+    "refreshTooltip": "Refresh Logs",
+    "closeTooltip": "Close",
+    "downloadTooltip": "Download Logs",
+    "searchPlaceholder": "Search logs...",
+    "levelTitle": "Log Level",
+    "linesLabel": "Lines:",
+    "linesTitle": "Number of lines"
+  },
+  "app": {
+    "activeDeployments": "Active Deployments",
+    "offlineInstances": "Offline Instances",
+    "showLess": "Show Less",
+    "showAllOffline": "Show All Offline ({{count}})",
+    "noContainers": "No containers found matching current filters.",
+    "footerCopyright": "\u00a9 2026 DockerView",
+    "sseRunning": "SSE STREAM RUNNING",
+    "lastUpdated": "LAST UPDATED:",
+    "github": "GitHub",
+    "toastContainerIdMissing": "Container ID is missing",
+    "toastOpStarting": "{{op}}ing container {{name}}...",
+    "toastOpSuccess": "Container {{name}} {{op}}ed successfully",
+    "opStart": "start",
+    "opStop": "stop",
+    "opRestart": "restart",
+    "toastAuthFailed": "Authentication failed: Invalid security token",
+    "toastError": "Error: {{error}}",
+    "toastConnectionError": "Failed to connect to server: {{error}}",
+    "toastTokenSaved": "Token verified and saved"
+  }
+}

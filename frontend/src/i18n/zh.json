@@ -1,0 +1,77 @@
+{
+  "header": {
+    "title": "DockerView",
+    "subtitle": "Go",
+    "liveTelemetry": "实时监控",
+    "filterAll": "全部",
+    "filterRunning": "运行中",
+    "filterStopped": "已停止",
+    "searchPlaceholder": "搜索容器节点...",
+    "sortBy": "排序",
+    "sortName": "名称",
+    "sortCpu": "CPU",
+    "sortRam": "内存"
+  },
+  "summary": {
+    "totalNodes": "容器总数",
+    "active": "活跃中",
+    "avgLoad": "平均负载",
+    "peakMemory": "峰值内存",
+    "containerHealth": "容器健康状态"
+  },
+  "container": {
+    "statusRunning": "运行中",
+    "statusStopped": "已停止",
+    "cpuLoad": "CPU 负载",
+    "ramUsage": "内存使用",
+    "btnStop": "停止",
+    "btnRestart": "重启",
+    "btnStart": "启动",
+    "btnLogs": "日志",
+    "healthHealthy": "健康",
+    "healthWarning": "警告",
+    "healthDanger": "危险"
+  },
+  "auth": {
+    "title": "需要身份验证",
+    "description": "请输入启动 dockerview 时在终端中打印的安全令牌。",
+    "placeholder": "安全令牌",
+    "verifyBtn": "验证令牌",
+    "invalidToken": "安全令牌无效"
+  },
+  "logs": {
+    "title": "日志：{{name}}",
+    "loading": "正在加载日志...",
+    "noOutput": "无日志输出",
+    "errorLoading": "加载日志失败：{{error}}",
+    "connectionError": "无法连接到服务器：{{error}}",
+    "refreshTooltip": "刷新日志",
+    "closeTooltip": "关闭",
+    "downloadTooltip": "下载日志",
+    "searchPlaceholder": "搜索日志...",
+    "levelTitle": "日志级别",
+    "linesLabel": "行数：",
+    "linesTitle": "显示的行数"
+  },
+  "app": {
+    "activeDeployments": "活跃实例",
+    "offlineInstances": "离线实例",
+    "showLess": "收起",
+    "showAllOffline": "显示全部离线 ({{count}})",
+    "noContainers": "未找到匹配当前筛选条件的容器。",
+    "footerCopyright": "© 2026 DockerView",
+    "sseRunning": "SSE 数据流运行中",
+    "lastUpdated": "最后更新：",
+    "github": "GitHub",
+    "toastContainerIdMissing": "容器 ID 缺失",
+    "toastOpStarting": "正在{{op}}容器 {{name}}...",
+    "toastOpSuccess": "容器 {{name}} {{op}}成功",
+    "opStart": "启动",
+    "opStop": "停止",
+    "opRestart": "重启",
+    "toastAuthFailed": "身份验证失败：安全令牌无效",
+    "toastError": "错误：{{error}}",
+    "toastConnectionError": "无法连接到服务器：{{error}}",
+    "toastTokenSaved": "令牌已验证并保存"
+  }
+}

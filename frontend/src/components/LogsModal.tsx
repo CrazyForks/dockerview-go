@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { RefreshCw, X, Search, Download, Filter } from 'lucide-react';
 import { basePath } from '../utils';
+import { useTranslation } from '../i18n';
 
 interface LogsProps {
   containerId: string;
@@ -15,7 +16,8 @@ const TAIL_OPTIONS = ['100', '500', '1000', '5000'];
 const LEVEL_OPTIONS = ['ALL', 'ERROR', 'WARN', 'INFO', 'DEBUG'];
 
 export function LogsModal({ containerId, containerName, serverToken, onClose, onAuthRequired }: LogsProps) {
-  const [logsText, setLogsText] = useState<string>('Loading logs...');
+  const { t } = useTranslation();
+  const [logsText, setLogsText] = useState<string>(t('logs.loading'));
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [logLevel, setLogLevel] = useState<string>('ALL');
@@ -58,7 +60,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
         const viewer = viewerRef.current;
         const wasAtBottom = viewer ? (viewer.scrollHeight - viewer.scrollTop <= viewer.clientHeight + 40) : true;
 
-        setLogsText(text || 'No log output');
+        setLogsText(text || t('logs.noOutput'));
 
         // Auto scroll to bottom
         if (wasAtBottom && viewer) {
@@ -70,10 +72,10 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
         onAuthRequired(containerId, containerName);
       } else {
         const err = await response.text();
-        setLogsText(`Error loading logs: ${err}`);
+        setLogsText(t('logs.errorLoading', { error: err }));
       }
     } catch (err: any) {
-      setLogsText(`Failed to connect to server: ${err.message}`);
+      setLogsText(t('logs.connectionError', { error: err.message }));
     }
   }, [containerId, serverToken, tailLines, debouncedSearch, logLevel, onAuthRequired]);
 
@@ -148,8 +150,8 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#101117]/85 border border-white/8 rounded-3xl w-[95%] sm:w-[90%] max-w-[900px] h-[85%] sm:h-[80%] max-h-[90vh] sm:max-h-[650px] flex flex-col shadow-2xl backdrop-blur-3xl z-[1001] animate-modal-in focus:outline-none">
           <div className="p-4 px-5 sm:p-5 sm:px-7 border-b border-white/6 flex justify-between items-center gap-4">
             <div className="text-left min-w-0 flex-1">
-              <Dialog.Title className="text-sm sm:text-lg font-bold text-white m-0 truncate" title={`Logs: ${containerName}`}>
-                Logs: {containerName}
+              <Dialog.Title className="text-sm sm:text-lg font-bold text-white m-0 truncate" title={t('logs.title', { name: containerName })}>
+                {t('logs.title', { name: containerName })}
               </Dialog.Title>
               <Dialog.Description className="sr-only">
                 Viewer for container stream logs.
@@ -163,20 +165,20 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
               <button
                 onClick={fetchLogs}
                 className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                title="Refresh Logs"
+                title={t('logs.refreshTooltip')}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleDownload}
                 className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                title="Download Logs"
+                title={t('logs.downloadTooltip')}
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
               <Dialog.Close
                 className="w-8 h-8 rounded-lg bg-white/3 hover:bg-white/8 border border-white/6 hover:border-white/15 text-text-dim hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                title="Close"
+                title={t('logs.closeTooltip')}
               >
                 <X className="w-3.5 h-3.5" />
               </Dialog.Close>
@@ -192,7 +194,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search logs..."
+                placeholder={t('logs.searchPlaceholder')}
                 className="w-full bg-white/3 hover:bg-white/5 focus:bg-white/5 border border-white/8 focus:border-accent-cyan/40 rounded-lg py-1.5 pl-8 pr-3 text-white text-[16px] sm:text-[12px] outline-none transition-all placeholder:text-text-dim"
               />
             </div>
@@ -204,7 +206,7 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
                 value={logLevel}
                 onChange={(e) => setLogLevel(e.target.value)}
                 className={selectClass}
-                title="Log Level"
+                title={t('logs.levelTitle')}
               >
                 {LEVEL_OPTIONS.map((level) => (
                   <option key={level} value={level} className="bg-[#1a1b23]">
@@ -216,12 +218,12 @@ export function LogsModal({ containerId, containerName, serverToken, onClose, on
 
             {/* Tail lines */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-text-dim whitespace-nowrap">Lines:</span>
+              <span className="text-[11px] text-text-dim whitespace-nowrap">{t('logs.linesLabel')}</span>
               <select
                 value={tailLines}
                 onChange={(e) => setTailLines(e.target.value)}
                 className={selectClass}
-                title="Number of lines"
+                title={t('logs.linesTitle')}
               >
                 {TAIL_OPTIONS.map((n) => (
                   <option key={n} value={n} className="bg-[#1a1b23]">

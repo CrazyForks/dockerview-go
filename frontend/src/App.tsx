@@ -3,6 +3,7 @@ import { RefreshCcw } from 'lucide-react';
 import type { ToastMessage } from './types';
 import { formatBytes, basePath } from './utils';
 import { useTelemetry } from './hooks/useTelemetry';
+import { useTranslation } from './i18n';
 import { Header } from './components/Header';
 import { SummaryDashboard } from './components/SummaryDashboard';
 import { ContainerCard } from './components/ContainerCard';
@@ -10,6 +11,8 @@ import { AuthModal } from './components/AuthModal';
 import { LogsModal } from './components/LogsModal';
 
 export default function App() {
+  const { t } = useTranslation();
+
   // Auth state
   const [serverToken, setServerToken] = useState<string>(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -75,7 +78,7 @@ export default function App() {
   const performOp = async (containerId: string, op: 'start' | 'stop' | 'restart', name: string, token?: string) => {
     const authToken = token ?? serverToken;
     if (!containerId) {
-      showToast('Container ID is missing', 'error');
+      showToast(t('app.toastContainerIdMissing'), 'error');
       return;
     }
     if (!authToken) {
@@ -85,7 +88,8 @@ export default function App() {
       return;
     }
 
-    showToast(`${op.charAt(0).toUpperCase() + op.slice(1)}ing container ${name}...`, 'info');
+    const opVerb = t(`app.op${op.charAt(0).toUpperCase() + op.slice(1)}`);
+    showToast(t('app.toastOpStarting', { op: opVerb, name }), 'info');
 
     try {
       const response = await fetch(`${basePath}api/container/op?id=${containerId}&op=${op}&token=${authToken}`, {
@@ -93,9 +97,9 @@ export default function App() {
       });
 
       if (response.ok) {
-        showToast(`Container ${name} ${op}ed successfully`, 'success');
+        showToast(t('app.toastOpSuccess', { op: opVerb, name }), 'success');
       } else if (response.status === 401) {
-        showToast('Authentication failed: Invalid security token', 'error');
+        showToast(t('app.toastAuthFailed'), 'error');
         localStorage.removeItem('dockerview_token');
         setServerToken('');
         setPendingAction({ kind: 'op', containerId, op, containerName: name });
@@ -103,10 +107,10 @@ export default function App() {
         setShowAuthModal(true);
       } else {
         const errMsg = await response.text();
-        showToast(`Error: ${errMsg}`, 'error');
+        showToast(t('app.toastError', { error: errMsg }), 'error');
       }
     } catch (err: any) {
-      showToast(`Failed to connect to server: ${err.message}`, 'error');
+      showToast(t('app.toastConnectionError', { error: err.message }), 'error');
     }
   };
 
@@ -127,7 +131,7 @@ export default function App() {
     setServerToken(token);
     localStorage.setItem('dockerview_token', token);
     setShowAuthModal(false);
-    showToast('Token verified and saved', 'success');
+    showToast(t('app.toastTokenSaved'), 'success');
     if (pendingAction) {
       // Execute the pending action using the new token directly.
       // We pass the token explicitly instead of relying on state / closure,
@@ -178,7 +182,7 @@ export default function App() {
             {filteredContainers.some(isRunning) && (
               <div>
                 <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-white/4">
-                  Active Deployments
+                  {t('app.activeDeployments')}
                 </div>
                 <div className="grid-container">
                   {filteredContainers.filter(isRunning).map(c => (
@@ -199,7 +203,7 @@ export default function App() {
             {filteredContainers.some(c => !isRunning(c)) && (
               <div>
                 <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-white/4">
-                  Offline Instances ({filteredContainers.filter(c => !isRunning(c)).length})
+                  {t('app.offlineInstances')} ({filteredContainers.filter(c => !isRunning(c)).length})
                 </div>
                 <div className="grid-container">
                   {filteredContainers
@@ -222,7 +226,7 @@ export default function App() {
                       onClick={() => setShowAllOffline(!showAllOffline)}
                       className="px-5 py-2.5 rounded-xl bg-white/2 hover:bg-white/5 border border-white/5 hover:border-white/10 text-text-dim hover:text-white font-bold text-[11px] tracking-wider uppercase transition-all cursor-pointer"
                     >
-                      {showAllOffline ? 'Show Less' : `Show All Offline (${filteredContainers.filter(c => !isRunning(c)).length})`}
+                    {showAllOffline ? t('app.showLess') : t('app.showAllOffline', { count: filteredContainers.filter(c => !isRunning(c)).length })}
                     </button>
                   </div>
                 )}
@@ -231,7 +235,7 @@ export default function App() {
           </div>
         ) : (
           <div className="text-center py-[60px] text-text-dim font-semibold text-[14px]">
-            No containers found matching current filters.
+            {t('app.noContainers')}
           </div>
         )}
 
@@ -239,23 +243,23 @@ export default function App() {
         <footer className="mt-[100px] pt-10 border-t border-card-border text-[11px] text-text-dim">
           <div className="flex flex-wrap justify-between items-center gap-5">
             <div className="flex items-center gap-3.5">
-              <span>© 2026 DockerView</span>
-              <span className="bg-white/3 border border-white/5 px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.13</span>
+              <span>{t('app.footerCopyright')}</span>
+              <span className="bg-white/3 border border-white/5 px-1.5 py-0.5 rounded font-mono font-bold text-accent-cyan">v0.1.14</span>
             </div>
             <div className="flex items-center gap-6 font-semibold">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-success live-pulse" />
-                <span>SSE STREAM RUNNING</span>
+                <span>{t('app.sseRunning')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <RefreshCcw className="w-2.5 h-2.5 opacity-70 animate-spin" style={{ animationDuration: '6s' }} />
-                <span>LAST UPDATED: <span>{lastUpdate}</span></span>
+                <span>{t('app.lastUpdated')} <span>{lastUpdate}</span></span>
               </div>
             </div>
             <div>
-              <a 
-                href="https://github.com/zsuroy/dockerview-go" 
-                target="_blank" 
+              <a
+                href="https://github.com/zsuroy/dockerview-go"
+                target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 text-text-dim hover:text-white bg-white/2 hover:bg-white/5 border border-white/3 hover:border-white/10 px-3.5 py-1.5 rounded-lg transition-all font-semibold text-[11px]"
               >
@@ -263,7 +267,7 @@ export default function App() {
                   <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
                   <path d="M9 18c-4.51 2-5-2-7-2" />
                 </svg>
-                <span>GitHub</span>
+                <span>{t('app.github')}</span>
               </a>
             </div>
           </div>

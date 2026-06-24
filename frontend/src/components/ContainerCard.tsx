@@ -3,6 +3,7 @@ import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse }
 import type { Container } from '../types';
 import { parseSize } from '../utils';
 import { Sparkline, HighlightedText } from './Sparkline';
+import { useTranslation } from '../i18n';
 
 interface ContainerCardProps {
   container: Container;
@@ -13,6 +14,7 @@ interface ContainerCardProps {
 }
 
 export function ContainerCard({ container, history, onOp, onLogs, searchQuery }: ContainerCardProps) {
+  const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +95,8 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
                 <HeartPulse className="w-3 h-3" />
                 <span className="tabular-nums">{container.healthscore}</span>
                 <span className="text-[9px] opacity-80">
-                  {container.healthstatus === 'healthy' ? 'HEALTHY' :
-                   container.healthstatus === 'warning' ? 'WARNING' : 'DANGER'}
+                  {container.healthstatus === 'healthy' ? t('container.healthHealthy') :
+                   container.healthstatus === 'warning' ? t('container.healthWarning') : t('container.healthDanger')}
                 </span>
               </div>
             )}
@@ -103,7 +105,7 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
                 ? 'bg-success/5 text-success border-success/15'
                 : 'bg-danger/5 text-danger border-danger/15'
             }`}>
-              {isUp ? 'Running' : 'Stopped'}
+              {isUp ? t('container.statusRunning') : t('container.statusStopped')}
             </span>
           </div>
         </div>
@@ -113,7 +115,7 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
           {/* CPU Row */}
           <div className="flex items-center gap-4">
             <div className="flex flex-col w-[72px] shrink-0 text-left">
-              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">CPU LOAD</span>
+              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.cpuLoad')}</span>
               <span className="text-[13px] font-extrabold mt-0.5 tabular-nums">{container.cpu}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
@@ -132,7 +134,7 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
           {/* Memory Row */}
           <div className="flex items-center gap-4">
             <div className="flex flex-col w-[72px] shrink-0 text-left">
-              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">RAM USAGE</span>
+              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.ramUsage')}</span>
               <span className="text-[13px] font-extrabold mt-0.5 tabular-nums">{container.memory}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
@@ -165,36 +167,36 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
         <div className="card-actions">
           {isUp ? (
             <>
-              <button 
+              <button
                 onClick={() => onOp(container.fullid, 'stop', container.name)}
                 className="action-btn btn-stop"
               >
                 <Square className="w-3 h-3" />
-                Stop
+                {t('container.btnStop')}
               </button>
-              <button 
+              <button
                 onClick={() => onOp(container.fullid, 'restart', container.name)}
                 className="action-btn btn-restart"
               >
                 <RefreshCw className="w-3 h-3" />
-                Restart
+                {t('container.btnRestart')}
               </button>
             </>
           ) : (
-            <button 
+            <button
               onClick={() => onOp(container.fullid, 'start', container.name)}
               className="action-btn btn-start mr-auto"
             >
               <Play className="w-3 h-3" />
-              Start
+              {t('container.btnStart')}
             </button>
           )}
-          <button 
+          <button
             onClick={() => onLogs(container.fullid, container.name)}
             className="action-btn btn-logs ml-auto"
           >
             <Terminal className="w-3 h-3" />
-            Logs
+            {t('container.btnLogs')}
           </button>
         </div>
       </div>
