@@ -5,21 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.15] - 2026-06-25
+
+### Added
+
+- **One-Click Web Upgrade**: Added browser-based self-upgrade functionality next to the version badge in the footer, which queries GitHub releases, detects the installation type (`go_install` or `binary`), replaces the running binary atomically via `selfupdate` or triggers a background Go toolchain compile, and streams step-by-step progress events in real-time.
+- **Container Port Mappings Visualization**: Render container port bindings and exposed ports inside each telemetry card on the web dashboard. Standard exposed ports display in clean neutral badges; bound port mappings are visualized in clickable hyperlinks (e.g. `8080 → 80/tcp`) pointing directly to their mapped browser host URL.
+- **Container Command Execution (Exec)**: Introduced an interactive command execution (exec) modal in the web dashboard. Users can execute arbitrary shell commands inside running containers under secure token authentication. Includes interactive output streams (separated stdout/stderr styling), exit code visualization, instant output clipboard copying, and customizable template shortcuts (e.g. directory listings, process tree, env variables).
+
 ## [0.1.14] - 2026-06-24
 
 ### Added
+
 - **Multi-language Support (i18n)**: Implemented full internationalization support on the web dashboard. Added translation configuration and context hooks to switch dynamically between English and Chinese.
 - **Localized UI & Tooltips**: Fully translated headers, dashboard telemetry summary cards, container metric items, operation actions, log viewer UI, and interactive dialogs/tooltips.
 - **Theme Toggle (Light/Dark Mode)**: Added switching between dark and light themes with automatic system color-scheme preference detection and a custom persistent toggle button in the header. Optimized all metrics cards, logs viewports, and action dialogs for clear text contrast and visibility under the light theme.
 
+
 ## [0.1.13] - 2026-06-18
 
 ### Added
+
 - **Container Health Scoring**: Compute real-time health score (0-100) and status labels ("healthy", "warning", "dangerous") based on CPU load, memory utilization, Disk I/O, Network traffic, container restarts, and uptime.
 - **Health Indicators Panel**: Optimized the top dashboard summary grid into an integrated, mobile-responsive monitoring panel showing total nodes, active nodes, and health distribution with neon pulsing status indicators.
 - **Log Modal Enhancements**: Added support for log keyword searching (grep), log level filters (ALL, DEBUG, INFO, WARN, ERROR), customizable tail line counts, search match highlighting, and instant log file downloading.
 
 ### Fixed
+
 - **Double Auth Dialog Bug**: Resolved stale closure state issue where container action actions or opening logs would trigger the authentication window twice.
 - **Stopped Container Tracking**: Redesigned stopped containers listing to only show containers stopped via dockerview during the current session, preventing dashboard clutter from old historical inactive containers.
 - **Mobile Adaptations**: Enhanced spacing and sizes of dialog content boxes and headers on small screens to ensure all elements (e.g. close buttons) remain perfectly visible and aligned.

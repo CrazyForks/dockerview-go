@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +17,13 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 )
+
+type PortMapping struct {
+	IP          string `json:"ip,omitempty"`
+	PrivatePort uint16 `json:"private_port"`
+	PublicPort  uint16 `json:"public_port,omitempty"`
+	Type        string `json:"type"`
+}
 
 type ContainerInfo struct {
 	FullID       string
@@ -25,8 +34,9 @@ type ContainerInfo struct {
 	Memory       string
 	Blkio        string
 	Network      string
-	HealthScore  int          `json:",omitempty"`
-	HealthStatus HealthStatus `json:",omitempty"`
+	HealthScore  int           `json:",omitempty"`
+	HealthStatus HealthStatus  `json:",omitempty"`
+	Ports        []PortMapping `json:"ports"`
 }
 
 func NewClient() (*client.Client, error) {
@@ -226,6 +236,16 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			isRunning,
 		)
 
+		var ports []PortMapping
+		for _, p := range c.Ports {
+			ports = append(ports, PortMapping{
+				IP:          p.IP,
+				PrivatePort: p.PrivatePort,
+				PublicPort:  p.PublicPort,
+				Type:        p.Type,
+			})
+		}
+
 		result = append(result, ContainerInfo{
 			FullID:       c.ID,
 			ID:           truncateID(c.ID, 12),
@@ -237,6 +257,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			Network:      networkStr,
 			HealthScore:  healthResult.Score,
 			HealthStatus: healthResult.Status,
+			Ports:        ports,
 		})
 	}
 
@@ -290,6 +311,43 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			false,
 		)
 
+		var ports []PortMapping
+		if inspect.NetworkSettings != nil && inspect.NetworkSettings.Ports != nil {
+			for port, bindings := range inspect.NetworkSettings.Ports {
+				parts := strings.Split(string(port), "/")
+				var privPort uint16
+				proto := "tcp"
+				if len(parts) > 0 {
+					if p, err := strconv.Atoi(parts[0]); err == nil {
+						privPort = uint16(p)
+					}
+				}
+				if len(parts) > 1 {
+					proto = parts[1]
+				}
+
+				if len(bindings) == 0 {
+					ports = append(ports, PortMapping{
+						PrivatePort: privPort,
+						Type:        proto,
+					})
+				} else {
+					for _, b := range bindings {
+						var pubPort uint16
+						if p, err := strconv.Atoi(b.HostPort); err == nil {
+							pubPort = uint16(p)
+						}
+						ports = append(ports, PortMapping{
+							IP:          b.HostIP,
+							PrivatePort: privPort,
+							PublicPort:  pubPort,
+							Type:        proto,
+						})
+					}
+				}
+			}
+		}
+
 		result = append(result, ContainerInfo{
 			FullID:       inspect.ID,
 			ID:           truncateID(inspect.ID, 12),
@@ -301,6 +359,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			Network:      "N/A",
 			HealthScore:  healthResult.Score,
 			HealthStatus: healthResult.Status,
+			Ports:        ports,
 		})
 	}
 
@@ -478,3 +537,50 @@ func GetContainerLogs(ctx context.Context, cli *client.Client, containerID, tail
 
 	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
+
+// ExecResult holds the result of command execution
+type ExecResult struct {
+	ExitCode int    `json:"exit_code"`
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+}
+
+// ContainerExec executes a command inside a running container and returns stdout/stderr.
+func ContainerExec(ctx context.Context, cli *client.Client, containerID string, cmd []string) (ExecResult, error) {
+	var result ExecResult
+
+	options := container.ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          cmd,
+	}
+
+	resp, err := cli.ContainerExecCreate(ctx, containerID, options)
+	if err != nil {
+		return result, err
+	}
+
+	attachResp, err := cli.ContainerExecAttach(ctx, resp.ID, container.ExecStartOptions{})
+	if err != nil {
+		return result, err
+	}
+	defer attachResp.Close()
+
+	var stdout, stderr bytes.Buffer
+	_, err = stdcopy.StdCopy(&stdout, &stderr, attachResp.Reader)
+	if err != nil {
+		return result, err
+	}
+
+	inspectResp, err := cli.ContainerExecInspect(ctx, resp.ID)
+	if err != nil {
+		return result, err
+	}
+
+	result.ExitCode = inspectResp.ExitCode
+	result.Stdout = stdout.String()
+	result.Stderr = stderr.String()
+
+	return result, nil
+}
+

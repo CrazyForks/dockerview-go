@@ -10,7 +10,12 @@
     "sortBy": "排序",
     "sortName": "名称",
     "sortCpu": "CPU",
-    "sortRam": "内存"
+    "sortRam": "内存",
+    "upgradeUpgrading": "正在更新...",
+    "upgradeSuccess": "更新成功！需要重启",
+    "upgradeFailed": "更新失败 - 重试",
+    "upgradeAvailable": "更新至 v{{version}}",
+    "upgradeAvailableTooltip": "新版本 v{{version}} 可用。点击更新。"
   },
   "summary": {
     "totalNodes": "容器总数",
@@ -30,7 +35,28 @@
     "btnLogs": "日志",
     "healthHealthy": "健康",
     "healthWarning": "警告",
-    "healthDanger": "危险"
+    "healthDanger": "危险",
+    "ports": "端口映射",
+    "btnExec": "执行命令"
+  },
+  "exec": {
+    "title": "执行命令：{{name}}",
+    "placeholder": "输入要执行的命令，例如 ls -la",
+    "btnRun": "执行",
+    "running": "正在执行命令...",
+    "exitCode": "退出码：{{code}}",
+    "noOutput": "无输出内容",
+    "quickTemplates": "常用命令模板",
+    "copyOutput": "复制输出",
+    "outputCopied": "输出已复制到剪贴板！",
+    "subtitle": "ID: {{id}} | 在此运行中的容器内执行命令",
+    "emptyHint": "在上方输入命令或点击常用模板进行执行",
+    "tmplDirList": "列出目录",
+    "tmplEnvVars": "环境变量",
+    "tmplDiskUsage": "磁盘占用",
+    "tmplCurrentUser": "当前用户",
+    "tmplNetworkConfig": "网络配置",
+    "tmplProcessList": "进程列表"
   },
   "auth": {
     "title": "需要身份验证",
@@ -60,6 +86,14 @@
     "showAllOffline": "显示全部离线 ({{count}})",
     "noContainers": "未找到匹配当前筛选条件的容器。",
     "footerCopyright": "© 2026 DockerView",
+    "footerUpgradeAvailable": "新版本 v{{version}} 可用",
+    "footerUpgradeSuccess": "已更新 - 需要重启",
+    "upgradeToastStarting": "正在启动更新...",
+    "upgradeToastDownloading": "正在下载最新版本...",
+    "upgradeToastApplying": "正在应用更新...",
+    "upgradeToastSuccess": "更新成功！请重启 dockerview 以启用新版本。",
+    "upgradeToastFailed": "更新失败: {{error}}",
+    "upgradeToastConnectionLost": "更新失败: 连接已断开。",
     "sseRunning": "SSE 数据流运行中",
     "lastUpdated": "最后更新：",
     "github": "GitHub",

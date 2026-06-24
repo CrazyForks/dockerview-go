@@ -350,6 +350,13 @@ body::after {
   border-color: rgba(0, 170, 255, 0.25);
 }
 
+.btn-exec:hover {
+  background: rgba(213, 0, 249, 0.1);
+  color: var(--color-accent-pink);
+  border-color: rgba(213, 0, 249, 0.25);
+}
+
+
 /* Primary CTA button */
 .btn-primary {
   background-color: var(--theme-accent-cyan-bright);

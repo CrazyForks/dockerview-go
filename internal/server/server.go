@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/zsuroy/dockerview-go/internal/docker"
+	"github.com/zsuroy/dockerview-go/internal/version"
 )
 
 //go:embed all:web
@@ -20,22 +22,30 @@ var webContent embed.FS
 
 // Server implements an HTTP server that forwards Docker container data.
 type Server struct {
-	mu           sync.RWMutex
-	clients      map[chan []docker.ContainerInfo]bool
-	currentData  []docker.ContainerInfo
-	dashboard    []byte
-	dockerClient *client.Client
-	token        string
+	mu             sync.RWMutex
+	clients        map[chan []docker.ContainerInfo]bool
+	currentData    []docker.ContainerInfo
+	dashboard      []byte
+	dockerClient   *client.Client
+	token          string
+	currentVersion string
+	commit         string
+	buildDate      string
+	upgradeMu      sync.Mutex
+	upgradeRunning bool
 }
 
 // NewServer creates a new Server instance.
-func NewServer(cli *client.Client, token string) *Server {
+func NewServer(cli *client.Client, token string, currentVersion, commit, buildDate string) *Server {
 	data, _ := webContent.ReadFile("web/index.html")
 	return &Server{
-		clients:      make(map[chan []docker.ContainerInfo]bool),
-		dashboard:    data,
-		dockerClient: cli,
-		token:        token,
+		clients:        make(map[chan []docker.ContainerInfo]bool),
+		dashboard:      data,
+		dockerClient:   cli,
+		token:          token,
+		currentVersion: currentVersion,
+		commit:         commit,
+		buildDate:      buildDate,
 	}
 }
 
@@ -102,6 +112,9 @@ func (s *Server) Start(ctx context.Context, port int) error {
 	mux.HandleFunc("/dashboard", s.handleDashboard)
 	mux.HandleFunc("/api/container/op", s.handleContainerOp)
 	mux.HandleFunc("/api/container/logs", s.handleContainerLogs)
+	mux.HandleFunc("/api/container/exec", s.handleContainerExec)
+	mux.HandleFunc("/api/version", s.handleVersion)
+	mux.HandleFunc("/api/upgrade", s.handleUpgrade)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Try to serve static file; if not found, fall back to index.html (SPA)
 		path := strings.TrimPrefix(r.URL.Path, "/")
@@ -358,4 +371,166 @@ func filterLogs(logs string, grep string, level string) string {
 	}
 
 	return strings.Join(filtered, "\n")
+}
+
+// handleVersion returns version info including latest available version.
+// GET /api/version - no auth required
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	info := version.GetInfo(r.Context(), s.currentVersion, s.commit, s.buildDate)
+	json.NewEncoder(w).Encode(info)
+}
+
+// handleUpgrade performs the upgrade and streams progress via SSE.
+// GET /api/upgrade?token=...  (SSE streaming, EventSource compatible)
+func (s *Server) handleUpgrade(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(w, r) {
+		return
+	}
+
+	// Allow GET for SSE (EventSource only supports GET)
+	if r.Method != http.MethodGet {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Prevent concurrent upgrades
+	s.upgradeMu.Lock()
+	if s.upgradeRunning {
+		s.upgradeMu.Unlock()
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": "Upgrade already in progress"})
+		return
+	}
+	s.upgradeRunning = true
+	s.upgradeMu.Unlock()
+
+	defer func() {
+		s.upgradeMu.Lock()
+		s.upgradeRunning = false
+		s.upgradeMu.Unlock()
+	}()
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+
+	// clientGone is closed when the SSE client disconnects.
+	clientGone := make(chan struct{})
+	go func() {
+		<-r.Context().Done()
+		close(clientGone)
+	}()
+
+	var writeMu sync.Mutex
+	sendUpgradeEvent := func(status, message string) {
+		select {
+		case <-clientGone:
+			return // Client disconnected, stop sending
+		default:
+		}
+		writeMu.Lock()
+		defer writeMu.Unlock()
+		data, _ := json.Marshal(map[string]string{"status": status, "message": message})
+		fmt.Fprintf(w, "data: %s\n\n", data)
+		flusher.Flush()
+	}
+
+	method := version.DetectInstallMethod()
+	// Use a detached context with timeout for the upgrade so that
+	// client disconnection does not interrupt a binary replacement.
+	upgradeCtx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+	version.DoUpgrade(upgradeCtx, method, sendUpgradeEvent)
+}
+
+func (s *Server) handleContainerExec(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(w, r) {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Missing 'id' parameter", http.StatusBadRequest)
+		return
+	}
+
+	var reqBody struct {
+		Cmd interface{} `json:"cmd"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	var cmd []string
+	switch v := reqBody.Cmd.(type) {
+	case string:
+		if strings.TrimSpace(v) == "" {
+			http.Error(w, "Empty command", http.StatusBadRequest)
+			return
+		}
+		cmd = []string{"sh", "-c", v}
+	case []interface{}:
+		for _, item := range v {
+			if str, ok := item.(string); ok {
+				if strings.TrimSpace(str) != "" {
+					cmd = append(cmd, str)
+				}
+			}
+		}
+	default:
+		http.Error(w, "Invalid 'cmd' parameter (must be string or array of strings)", http.StatusBadRequest)
+		return
+	}
+
+	if len(cmd) == 0 {
+		http.Error(w, "Empty command", http.StatusBadRequest)
+		return
+	}
+
+	s.mu.RLock()
+	cli := s.dockerClient
+	s.mu.RUnlock()
+
+	if cli == nil {
+		http.Error(w, "Docker client not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	result, err := docker.ContainerExec(r.Context(), cli, id, cmd)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to execute command: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
 }

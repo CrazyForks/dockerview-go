@@ -16,9 +16,12 @@ English | [中文](README_zh.md)
 - **Web Container Controls**: Start, stop, and restart containers directly from the Web Dashboard (only showing containers stopped via dockerview during current session to keep the list clean).
 - **Container Health Scoring**: Dynamically calculates a 0-100 health score for each container based on CPU load, memory usage, disk I/O, network rate, restarts, and uptime. Features a grouped top panel showing healthy, warning, and dangerous counts with neon pulsing indicators.
 - **Inline Logs Modal**: Read container logs from TUI or in an advanced web modal featuring case-insensitive keyword searching, log level filters (ALL, DEBUG, INFO, WARN, ERROR), customizable tail line counts, match highlighting, auto-scroll, and instant log file downloads.
+- **Command Execution Modal**: Execute shell commands inside any running container directly from the web dashboard. Features quick template shortcuts (directory list, environment variables, disk usage, etc.), stdout/stderr output separation, exit status code display, copy output helper, and token verification security.
 - **Token Security**: Secured control API and log endpoints with token verification. Automatically generates secure startup keys, supports guest/read-only mode, and stores session tokens in localStorage.
 - **Multi-language Support**: Interactive web dashboard supports language toggling between English and Chinese (via a button in the navigation header).
 - **Theme Toggle**: Real-time web dashboard supports toggling between light and dark themes (with automatic system color-scheme preference detection).
+- **One-Click Web Upgrade**: Trigger browser-based self-upgrades directly next to the version badge in the footer, which queries GitHub releases, automatically identifies the installation type (`go install` or `binary`), performs atomic updates, and streams step-by-step progress events in real-time.
+- **Port Mappings Visualizer**: Displays all container port mappings and exposed ports directly on the dashboard cards. Exposed ports render as clean tags, and mapped port mappings appear as interactive badges (e.g. `8080 → 80/tcp`) linking directly to the running container web interface.
 - **Color-coded Status**: Green for running, red for stopped/exited containers.
 - **CPU Alerts**: High CPU usage (>50%) highlighted in red.
 - **Auto-detection**: Automatically detects Docker socket (including Unix sockets, WSL, Colima, OrbStack, Podman, Rancher Desktop, etc.).

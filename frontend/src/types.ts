@@ -1,3 +1,10 @@
+export interface PortMapping {
+  ip?: string;
+  private_port: number;
+  public_port?: number;
+  type: string;
+}
+
 export interface Container {
   fullid: string;
   id: string;
@@ -9,6 +16,7 @@ export interface Container {
   network: string;
   healthscore?: number;
   healthstatus?: 'healthy' | 'warning' | 'dangerous';
+  ports?: PortMapping[];
 }
 
 export interface ToastMessage {

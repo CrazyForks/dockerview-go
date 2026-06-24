@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse } from 'lucide-react';
+import { ArrowDownUp, HardDrive, Play, Square, RefreshCw, Terminal, HeartPulse, Command } from 'lucide-react';
 import type { Container } from '../types';
 import { parseSize } from '../utils';
 import { Sparkline, HighlightedText } from './Sparkline';
@@ -10,10 +10,11 @@ interface ContainerCardProps {
   history?: { cpu: number[]; ram: number[] };
   onOp: (id: string, op: 'start' | 'stop' | 'restart', name: string) => Promise<void>;
   onLogs: (id: string, name: string) => void;
+  onExec: (id: string, name: string) => void;
   searchQuery: string;
 }
 
-export function ContainerCard({ container, history, onOp, onLogs, searchQuery }: ContainerCardProps) {
+export function ContainerCard({ container, history, onOp, onLogs, onExec, searchQuery }: ContainerCardProps) {
   const { t } = useTranslation();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -164,6 +165,47 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
           </div>
         </div>
 
+        {/* Port Mappings Visualizer */}
+        {container.ports && container.ports.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-6 z-10 relative text-left">
+            <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase w-full mb-1">
+              {t('container.ports')}
+            </span>
+            {container.ports.map((pm, idx) => {
+              const hasMapping = pm.public_port !== undefined;
+              const displayText = hasMapping
+                ? `${pm.public_port} → ${pm.private_port}/${pm.type}`
+                : `${pm.private_port}/${pm.type}`;
+
+              if (hasMapping) {
+                const targetHost = pm.ip === '0.0.0.0' || pm.ip === '::' ? 'localhost' : (pm.ip || 'localhost');
+                const href = `http://${targetHost}:${pm.public_port}`;
+                return (
+                  <a
+                    key={idx}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-accent-cyan/10 hover:bg-accent-cyan/20 border border-accent-cyan/20 hover:border-accent-cyan/40 text-[10px] text-accent-cyan font-mono font-bold transition-all cursor-pointer"
+                    title={`Open http://${targetHost}:${pm.public_port} in browser`}
+                  >
+                    <span>{displayText}</span>
+                  </a>
+                );
+              }
+
+              return (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-surface-2 border border-border-light text-[10px] text-text-dim font-mono font-semibold"
+                >
+                  {displayText}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {/* Footer Metrics */}
         <div className="flex justify-between pt-4 border-t border-border-subtle text-[11px] text-text-dim z-10 relative">
           <span className="flex items-center gap-1">
@@ -202,6 +244,15 @@ export function ContainerCard({ container, history, onOp, onLogs, searchQuery }:
             >
               <Play className="w-3 h-3" />
               {t('container.btnStart')}
+            </button>
+          )}
+          {isUp && (
+            <button
+              onClick={() => onExec(container.fullid, container.name)}
+              className="action-btn btn-exec"
+            >
+              <Command className="w-3 h-3" />
+              {t('container.btnExec')}
             </button>
           )}
           <button
