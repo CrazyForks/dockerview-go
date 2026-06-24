@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DockerView Go Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script>
+      // Prevent FOUC - set theme before paint
+      (function() {
+        var stored = localStorage.getItem('dockerview-theme');
+        var theme;
+        if (stored === 'dark' || stored === 'light') {
+          theme = stored;
+        } else {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
     <!-- Plus Jakarta Sans & JetBrains Mono Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

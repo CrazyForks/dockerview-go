@@ -1,32 +1,153 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #030303;
-  --color-accent-cyan: #00f2ff;
-  --color-accent-pink: #d500f9;
-  --color-card-bg: rgba(14, 14, 18, 0.6);
-  --color-card-border: rgba(255, 255, 255, 0.05);
-  --color-text-dim: rgba(255, 255, 255, 0.45);
-  --color-danger: #ff0055;
-  --color-success: #00ffaa;
-  --color-warning: #ffaa00;
+  --color-bg: var(--theme-bg);
+  --color-text: var(--theme-text);
+  --color-text-dim: var(--theme-text-dim);
+  --color-card-bg: var(--theme-card-bg);
+  --color-card-border: var(--theme-card-border);
+  --color-surface-1: var(--theme-surface-1);
+  --color-surface-2: var(--theme-surface-2);
+  --color-surface-3: var(--theme-surface-3);
+  --color-surface-4: var(--theme-surface-4);
+  --color-surface-5: var(--theme-surface-5);
+  --color-surface-6: var(--theme-surface-6);
+  --color-border-subtle: var(--theme-border-subtle);
+  --color-border-light: var(--theme-border-light);
+  --color-border-default: var(--theme-border-default);
+  --color-border-strong: var(--theme-border-strong);
+  --color-modal-bg: var(--theme-modal-bg);
+  --color-modal-overlay: var(--theme-modal-overlay);
+  --color-log-bg: var(--theme-log-bg);
+  --color-log-text: var(--theme-log-text);
+  --color-card-shadow: var(--theme-card-shadow);
+  --color-hover-text: var(--theme-text);
+  --color-accent-cyan: var(--theme-accent-cyan);
+  --color-accent-pink: var(--theme-accent-pink);
+  --color-accent-cyan-bright: var(--theme-accent-cyan-bright);
+  --color-danger: var(--theme-danger);
+  --color-success: var(--theme-success);
+  --color-warning: var(--theme-warning);
 }
 
+/* Default = Light theme */
 :root {
+  --theme-bg: #eef1f6;
+  --theme-text: #1a1b26;
+  --theme-text-dim: rgba(26, 27, 38, 0.5);
+  --theme-card-bg: rgba(255, 255, 255, 0.65);
+  --theme-card-border: rgba(0, 0, 0, 0.07);
+
+  /* Surface overlays (replacing white/X in dark mode) */
+  --theme-surface-1: rgba(0, 0, 0, 0.02);   /* ~ white/2 equivalent */
+  --theme-surface-2: rgba(0, 0, 0, 0.03);   /* ~ white/3 equivalent */
+  --theme-surface-3: rgba(0, 0, 0, 0.04);   /* ~ white/4 equivalent */
+  --theme-surface-4: rgba(0, 0, 0, 0.05);   /* ~ white/5 equivalent */
+  --theme-surface-5: rgba(0, 0, 0, 0.07);   /* ~ white/8 equivalent */
+  --theme-surface-6: rgba(0, 0, 0, 0.12);   /* ~ white/15 equivalent */
+
+  /* Borders */
+  --theme-border-subtle: rgba(0, 0, 0, 0.03);
+  --theme-border-light: rgba(0, 0, 0, 0.05);
+  --theme-border-default: rgba(0, 0, 0, 0.08);
+  --theme-border-strong: rgba(0, 0, 0, 0.12);
+
+  /* Modal */
+  --theme-modal-bg: rgba(255, 255, 255, 0.92);
+  --theme-modal-overlay: rgba(0, 0, 0, 0.35);
+
+  /* Log viewer */
+  --theme-log-bg: rgba(0, 0, 0, 0.03);
+  --theme-log-text: rgba(26, 27, 38, 0.85);
+
+  /* Card shadow */
+  --theme-card-shadow: rgba(0, 0, 0, 0.08);
+
+  /* Accent */
+  --accent: #00b8cc;
+  --accent-glow: rgba(0, 242, 255, 0.2);
+  --ram-color: #d500f9;
+  --ram-glow: rgba(213, 0, 249, 0.2);
+  --panel-blur: blur(24px);
+
+  /* Mesh gradient colors */
+  --mesh-cyan: rgba(0, 180, 200, 0.10);
+  --mesh-pink: rgba(180, 0, 200, 0.07);
+
+  /* Accent colors (deeper for light mode contrast) */
+  --theme-accent-cyan: #008fa3;
+  --theme-accent-pink: #a500c5;
+  --theme-accent-cyan-bright: #00d4e8;
+  --theme-danger: #d60047;
+  --theme-success: #00985f;
+  --theme-warning: #b57a00;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --theme-bg: #030303;
+  --theme-text: #ffffff;
+  --theme-text-dim: rgba(255, 255, 255, 0.45);
+  --theme-card-bg: rgba(14, 14, 18, 0.6);
+  --theme-card-border: rgba(255, 255, 255, 0.05);
+
+  --theme-surface-1: rgba(255, 255, 255, 0.02);
+  --theme-surface-2: rgba(255, 255, 255, 0.03);
+  --theme-surface-3: rgba(255, 255, 255, 0.04);
+  --theme-surface-4: rgba(255, 255, 255, 0.05);
+  --theme-surface-5: rgba(255, 255, 255, 0.08);
+  --theme-surface-6: rgba(255, 255, 255, 0.15);
+
+  --theme-border-subtle: rgba(255, 255, 255, 0.03);
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-default: rgba(255, 255, 255, 0.08);
+  --theme-border-strong: rgba(255, 255, 255, 0.12);
+
+  --theme-modal-bg: rgba(16, 17, 23, 0.85);
+  --theme-modal-overlay: rgba(0, 0, 0, 0.7);
+
+  --theme-log-bg: rgba(0, 0, 0, 0.2);
+  --theme-log-text: rgba(255, 255, 255, 0.85);
+
+  --theme-card-shadow: rgba(0, 0, 0, 0.3);
+
   --accent: #00f2ff;
   --accent-glow: rgba(0, 242, 255, 0.4);
   --ram-color: #d500f9;
   --ram-glow: rgba(213, 0, 249, 0.4);
-  --panel-blur: blur(24px);
+
+  --mesh-cyan: rgba(0, 242, 255, 0.06);
+  --mesh-pink: rgba(213, 0, 249, 0.05);
+
+  /* Accent colors (bright neon for dark mode) */
+  --theme-accent-cyan: #00f2ff;
+  --theme-accent-pink: #d500f9;
+  --theme-accent-cyan-bright: #00f2ff;
+  --theme-danger: #ff0055;
+  --theme-success: #00ffaa;
+  --theme-warning: #ffaa00;
 }
 
 body {
-  background-color: #030303;
-  color: #ffffff;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth color transitions on theme change */
+.glass-panel, .glass-card, .theme-toggle-btn, .action-btn,
+input, footer, a {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Placeholder text */
+input::placeholder {
+  color: var(--theme-text-dim);
+  opacity: 0.7;
 }
 
 /* Abstract noise overlay */
@@ -43,6 +164,10 @@ body::after {
   z-index: 1000;
 }
 
+[data-theme="light"] body::after {
+  opacity: 0.035;
+}
+
 .mesh {
   position: fixed;
   top: 0;
@@ -50,23 +175,23 @@ body::after {
   width: 100%;
   height: 100%;
   z-index: -1;
-  background: 
-    radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(213, 0, 249, 0.05) 0%, transparent 40%);
+  background:
+    radial-gradient(circle at 10% 20%, var(--mesh-cyan) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, var(--mesh-pink) 0%, transparent 40%);
   pointer-events: none;
 }
 
 /* Glassmorphism custom classes */
 .glass-panel {
-  background: rgba(18, 18, 22, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
   backdrop-filter: var(--panel-blur);
   -webkit-backdrop-filter: var(--panel-blur);
 }
 
 .glass-card {
-  background: rgba(14, 14, 18, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -97,11 +222,15 @@ body::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255, 255, 255, 0.04), transparent 45%);
+  background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(128, 128, 128, 0.08), transparent 45%);
   z-index: 1;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.5s;
+}
+
+[data-theme="dark"] .tilt-card::before {
+  background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255, 255, 255, 0.04), transparent 45%);
 }
 
 .tilt-card:hover::before {
@@ -140,16 +269,16 @@ body::after {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.01);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--theme-surface-4);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--theme-surface-5);
 }
 
 /* Card Actions and Buttons */
@@ -159,15 +288,15 @@ body::after {
   gap: 8px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+  border-top: 1px dashed var(--theme-border-subtle);
   z-index: 10;
   position: relative;
 }
 
 .action-btn {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--color-text-dim);
+  background: var(--theme-surface-1);
+  border: 1px solid var(--theme-border-subtle);
+  color: var(--theme-text-dim);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 11px;
@@ -180,9 +309,9 @@ body::after {
 }
 
 .action-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--theme-text);
+  background: var(--theme-surface-4);
+  border-color: var(--theme-border-strong);
   transform: translateY(-1px);
 }
 
@@ -198,26 +327,66 @@ body::after {
 }
 
 .btn-start:hover {
-  background: rgba(0, 255, 170, 0.08);
+  background: rgba(0, 255, 170, 0.1);
   color: var(--color-success);
-  border-color: rgba(0, 255, 170, 0.2);
+  border-color: rgba(0, 255, 170, 0.25);
 }
 
 .btn-stop:hover {
-  background: rgba(255, 0, 85, 0.08);
+  background: rgba(255, 0, 85, 0.1);
   color: var(--color-danger);
-  border-color: rgba(255, 0, 85, 0.2);
+  border-color: rgba(255, 0, 85, 0.25);
 }
 
 .btn-restart:hover {
-  background: rgba(255, 170, 0, 0.08);
+  background: rgba(255, 170, 0, 0.1);
   color: var(--color-warning);
-  border-color: rgba(255, 170, 0, 0.2);
+  border-color: rgba(255, 170, 0, 0.25);
 }
 
 .btn-logs:hover {
-  background: rgba(0, 170, 255, 0.08);
+  background: rgba(0, 170, 255, 0.1);
   color: var(--color-accent-cyan);
-  border-color: rgba(0, 170, 255, 0.2);
+  border-color: rgba(0, 170, 255, 0.25);
 }
 
+/* Primary CTA button */
+.btn-primary {
+  background-color: var(--theme-accent-cyan-bright);
+  color: #0b0c10;
+  border: 1px solid transparent;
+}
+
+.btn-primary:hover {
+  background-color: #00dd95;
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+  background: var(--theme-surface-2);
+  border: 1px solid var(--theme-border-light);
+  color: var(--theme-text-dim);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-toggle-btn:hover {
+  color: var(--theme-text);
+  background: var(--theme-surface-4);
+  border-color: var(--theme-border-default);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .theme-toggle-btn:hover {
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+  color: #00f2ff;
+}
