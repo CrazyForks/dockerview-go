@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Chinese Text Layout**: Fixed formatting issues when using Chinese language. Replaced `uppercase` CSS class (which doesn't work with CJK characters) with `tracking-wide`, adjusted letter-spacing from `tracking-wider` to `tracking-wide` for better CJK rendering, increased label widths from 72px to 80px to accommodate wider Chinese characters, and added Chinese font support (PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC) to the font stack.
 
+- **Mobile Responsiveness**: Added responsive styles for grid container (single column on mobile), card padding, and button layout. Reduced main container padding on mobile for better edge handling.
+
+- **Language Switcher Layout**: Grouped language and theme buttons in a flex container with `break-inside-avoid` to prevent them from splitting across lines on mobile when header wraps.
+
 ## [0.1.15] - 2026-06-25
 
 ### Added
