@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- 深邃暗色背景渐变 -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    
+    <!-- 霓虹发光滤镜 -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- 玻璃拟物渐变 (用于集装箱) -->
+    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.01" />
+    </linearGradient>
+  </defs>
+
+  <!-- ================= 背景层 ================= -->
+  <circle cx="200" cy="200" r="190" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="2"/>
+  
+  <!-- 极简科技背景装饰 (雷达网格) -->
+  <g opacity="0.08" stroke="#00f2ff" stroke-width="1" fill="none">
+    <circle cx="200" cy="180" r="130" />
+    <circle cx="200" cy="180" r="85" />
+    <line x1="30" y1="180" x2="370" y2="180" stroke-dasharray="4,6"/>
+    <line x1="200" y1="20" x2="200" y2="340" stroke-dasharray="4,6"/>
+  </g>
+
+  <!-- ================= 核心图形层 ================= -->
+  <g transform="translate(0, -10)">
+    <!-- 鲸鱼主体 (极简线框 + 暗色填充) -->
+    <path d="M 100 200 Q 100 170, 130 165 L 270 165 Q 310 165, 310 200 L 310 220 Q 310 250, 270 250 L 150 250 Q 110 250, 95 230 Q 85 215, 100 200 Z" 
+          fill="#0F172A" stroke="#00f2ff" stroke-width="1.5" filter="url(#glow)" opacity="0.9"/>
+    
+    <!-- 鲸鱼尾巴 (流线型) -->
+    <path d="M 300 190 Q 330 180, 335 160 Q 338 150, 330 155 Q 320 165, 310 175 M 300 230 Q 330 240, 335 260 Q 338 270, 330 265 Q 320 255, 310 245" 
+          fill="none" stroke="#00f2ff" stroke-width="1.5" stroke-linecap="round" filter="url(#glow)"/>
+
+    <!-- 玻璃质感集装箱 -->
+    <g stroke="#00f2ff" stroke-width="1" fill="url(#glassGrad)">
+      <rect x="130" y="125" width="28" height="36" rx="3" />
+      <rect x="162" y="125" width="28" height="36" rx="3" />
+      <rect x="194" y="125" width="28" height="36" rx="3" />
+      <rect x="226" y="125" width="28" height="36" rx="3" />
+      
+      <rect x="146" y="85" width="28" height="36" rx="3" />
+      <rect x="178" y="85" width="28" height="36" rx="3" />
+      <rect x="210" y="85" width="28" height="36" rx="3" />
+    </g>
+    
+    <!-- 集装箱内部细节线 (增加精密感) -->
+    <g stroke="#00f2ff" stroke-width="0.5" opacity="0.3">
+      <line x1="144" y1="125" x2="144" y2="161" />
+      <line x1="176" y1="125" x2="176" y2="161" />
+      <line x1="208" y1="125" x2="208" y2="161" />
+    </g>
+
+    <!-- 监控/雷达眼 (呼吸波纹) -->
+    <g transform="translate(125, 205)">
+      <circle cx="0" cy="0" r="3" fill="#00f2ff" filter="url(#glow)"/>
+      <circle cx="0" cy="0" r="10" fill="none" stroke="#00f2ff" stroke-width="1">
+        <animate attributeName="r" values="3;16;3" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite" />
+      </circle>
+    </g>
+  </g>
+
+  <!-- Go 语言抽象标识 (极简六边形徽章) -->
+  <g transform="translate(280, 210)" filter="url(#glow)">
+    <polygon points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="#0F172A" stroke="#01f6ff" stroke-width="1.5"/>
+    <text x="0" y="4" font-family="'Inter', sans-serif" font-size="10" font-weight="bold" fill="#01f6ff" text-anchor="middle">Go</text>
+  </g>
+
+  <!-- ================= 文字排版层 ================= -->
+  <g transform="translate(200, 315)">
+    <!-- 主标题 (高字间距，现代SaaS风) -->
+    <text x="0" y="0" font-family="'Inter', 'Segoe UI', sans-serif" font-size="32" text-anchor="middle" letter-spacing="1.5">
+      <tspan fill="#94A3B8" font-weight="300">Docker</tspan>
+      <tspan fill="#F8FAFC" font-weight="700">View</tspan>
+    </text>
+
+    <!-- 状态指示器 Badge -->
+    <g transform="translate(0, 25)">
+      <rect x="-35" y="-14" width="70" height="24" rx="12" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <!-- 呼吸状态灯 -->
+      <circle cx="-20" cy="-2" r="3" fill="#00f2ff" filter="url(#glow)">
+         <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+      </circle>
+      <text x="5" y="3" font-family="'Fira Code', monospace" font-size="12" font-weight="500" fill="#00f2ff" text-anchor="middle" letter-spacing="1">.go</text>
+    </g>
+  </g>
+</svg>

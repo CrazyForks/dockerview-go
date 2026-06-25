@@ -1,16 +1,19 @@
 <div align="center">
 
+<!-- markdownlint-disable MD033 -->
+<img src="assets/logo.svg" alt="DockerView Go" width="120" />
+
 # DockerView-Go
 
 一款基于 Go 和 bubbletea 构建的精美终端 Docker 容器监控工具，配备华丽的实时 Web 仪表盘。
 
-![Release](https://img.shields.io/github/v/release/zsuroy/dockerview-go?logo=github)
-![CI](https://img.shields.io/github/actions/workflow/status/zsuroy/dockerview-go/ci.yml?label=ci)
-![Downloads](https://img.shields.io/github/downloads/zsuroy/dockerview-go/total?logo=github&label=downloads)
-![License](https://img.shields.io/github/license/zsuroy/dockerview-go)
-![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-SDK-2496ED?logo=docker&logoColor=white)
+[![Release](https://img.shields.io/github/v/release/zsuroy/dockerview-go?logo=github)](https://github.com/zsuroy/dockerview-go/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/zsuroy/dockerview-go/ci.yml?label=ci)](https://github.com/zsuroy/dockerview-go/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/github/downloads/zsuroy/dockerview-go/total?logo=github&label=downloads)](https://github.com/zsuroy/dockerview-go/releases)
+[![License](https://img.shields.io/github/license/zsuroy/dockerview-go)](https://github.com/zsuroy/dockerview-go/blob/master/LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-SDK-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/engine/reference/api/client-lib/)
 
 [English](README.md) | 中文
 
