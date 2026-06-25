@@ -25,6 +25,20 @@ type PortMapping struct {
 	Type        string `json:"type"`
 }
 
+// deduplicatePorts removes duplicate port entries based on PrivatePort, PublicPort, and Type.
+func deduplicatePorts(ports []PortMapping) []PortMapping {
+	seen := make(map[[3]any]bool)
+	var result []PortMapping
+	for _, p := range ports {
+		key := [3]any{p.PrivatePort, p.PublicPort, p.Type}
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
 type ContainerInfo struct {
 	FullID       string
 	ID           string
@@ -257,7 +271,7 @@ func GetContainerStats(ctx context.Context, cli *client.Client) ([]ContainerInfo
 			Network:      networkStr,
 			HealthScore:  healthResult.Score,
 			HealthStatus: healthResult.Status,
-			Ports:        ports,
+			Ports:        deduplicatePorts(ports),
 		})
 	}
 

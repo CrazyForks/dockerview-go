@@ -288,7 +288,7 @@ export default function App() {
   return (
     <div className="relative min-h-screen">
       <div className="mesh" />
-      <div className="max-w-[1600px] mx-auto px-[30px] py-[50px]">
+      <div className="max-w-[1600px] mx-auto px-5 py-[50px] md:px-[30px]">
 
         {/* Floating Controller Panel */}
         <Header
@@ -322,7 +322,7 @@ export default function App() {
             {/* Active grid */}
             {filteredContainers.some(isRunning) && (
               <div>
-                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
+                <div className="text-[12px] font-extrabold tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
                   {t('app.activeDeployments')}
                 </div>
                 <div className="grid-container">
@@ -344,7 +344,7 @@ export default function App() {
             {/* Offline grid */}
             {filteredContainers.some(c => !isRunning(c)) && (
               <div>
-                <div className="text-[12px] font-extrabold uppercase tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
+                <div className="text-[12px] font-extrabold tracking-[2px] text-text-dim mb-6 flex items-center gap-3 after:content-[''] after:grow after:h-[1px] after:bg-surface-3">
                   {t('app.offlineInstances')} ({filteredContainers.filter(c => !isRunning(c)).length})
                 </div>
                 <div className="grid-container">

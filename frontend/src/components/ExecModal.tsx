@@ -91,7 +91,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
           {/* Header */}
           <div className="flex justify-between items-start p-6 border-b border-border-subtle shrink-0">
             <div className="text-left">
-              <Dialog.Title className="text-base font-extrabold tracking-wider text-text flex items-center gap-2">
+              <Dialog.Title className="text-base font-extrabold tracking-wide text-text flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-accent-cyan" />
                 {t('exec.title', { name: containerName })}
               </Dialog.Title>
@@ -124,7 +124,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
               <button
                 type="submit"
                 disabled={isRunning || !cmdInput.trim()}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-accent-cyan hover:bg-accent-cyan/90 disabled:opacity-40 disabled:hover:bg-accent-cyan text-black font-extrabold text-[12px] uppercase tracking-wider rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-accent-cyan hover:bg-accent-cyan/90 disabled:opacity-40 disabled:hover:bg-accent-cyan text-black font-extrabold text-[12px] tracking-wide rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0"
               >
                 {isRunning ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -137,7 +137,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
 
             {/* Quick Templates */}
             <div className="flex flex-wrap gap-1.5 mt-3 items-center text-left">
-              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase mr-1">
+              <span className="text-[9px] font-bold text-text-dim tracking-wide mr-1">
                 {t('exec.quickTemplates')}:
               </span>
               {templates.map((tmpl, idx) => (
@@ -162,7 +162,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
             {isRunning && (
               <div className="flex flex-col items-center justify-center grow text-text-dim py-12 gap-3">
                 <RefreshCw className="w-6 h-6 animate-spin text-accent-cyan" />
-                <span className="font-bold text-[11px] tracking-wider uppercase animate-pulse">
+                <span className="font-bold text-[11px] tracking-wide animate-pulse">
                   {t('exec.running')}
                 </span>
               </div>
@@ -178,7 +178,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
               <div className="flex flex-col grow justify-between text-left">
                 {/* Meta details */}
                 <div className="flex justify-between items-center mb-4 shrink-0">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border font-extrabold text-[10px] uppercase tracking-wider ${
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border font-extrabold text-[10px] tracking-wide ${
                     result.exit_code === 0
                       ? 'bg-success/10 text-success border-success/20'
                       : 'bg-danger/10 text-danger border-danger/20'
@@ -189,7 +189,7 @@ export function ExecModal({ containerId, containerName, serverToken, onClose, on
 
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-light hover:border-border-default text-text-dim hover:text-text font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-light hover:border-border-default text-text-dim hover:text-text font-bold text-[10px] tracking-wide transition-all cursor-pointer"
                   >
                     {copied ? (
                       <>
