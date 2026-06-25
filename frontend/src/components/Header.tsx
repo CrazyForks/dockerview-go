@@ -106,25 +106,25 @@ export function Header({
         </div>
       </div>
 
-      {/* Language Switcher */}
-      <button
-        onClick={toggleLanguage}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg bg-surface-1 hover:bg-surface-2 border border-border-subtle hover:border-border-default text-text-dim hover:text-text transition-all cursor-pointer"
-        title={language === 'en' ? '切换到中文' : 'Switch to English'}
-      >
-        <Languages className="w-3.5 h-3.5" />
-        {language === 'en' ? '中文' : 'EN'}
-      </button>
-
-      {/* Theme Toggle */}
-      <button
-        onClick={onToggleTheme}
-        className="theme-toggle-btn"
-        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        aria-label="Toggle theme"
-      >
-        {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
+      {/* Language & Theme Controls */}
+      <div className="flex items-center gap-2 break-inside-avoid">
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg bg-surface-1 hover:bg-surface-2 border border-border-subtle hover:border-border-default text-text-dim hover:text-text transition-all cursor-pointer"
+          title={language === 'en' ? '切换到中文' : 'Switch to English'}
+        >
+          <Languages className="w-3.5 h-3.5" />
+          {language === 'en' ? '中文' : 'EN'}
+        </button>
+        <button
+          onClick={onToggleTheme}
+          className="theme-toggle-btn"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+      </div>
     </div>
   );
 }
