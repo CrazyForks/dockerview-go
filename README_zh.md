@@ -12,11 +12,9 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-SDK-2496ED?logo=docker&logoColor=white)
 
-English | [中文](README_zh.md)
+[English](README.md) | 中文
 
 </div>
-
-[English](README.md) | 中文
 
 ## 演示
 
