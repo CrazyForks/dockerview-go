@@ -1,6 +1,20 @@
+<div align="center">
+
 # DockerView-Go
 
 一款基于 Go 和 bubbletea 构建的精美终端 Docker 容器监控工具，配备华丽的实时 Web 仪表盘。
+
+![Release](https://img.shields.io/github/v/release/zsuroy/dockerview-go?logo=github)
+![CI](https://img.shields.io/github/actions/workflow/status/zsuroy/dockerview-go/ci.yml?label=ci)
+![Downloads](https://img.shields.io/github/downloads/zsuroy/dockerview-go/total?logo=github&label=downloads)
+![License](https://img.shields.io/github/license/zsuroy/dockerview-go)
+![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-SDK-2496ED?logo=docker&logoColor=white)
+
+English | [中文](README_zh.md)
+
+</div>
 
 [English](README.md) | 中文
 
