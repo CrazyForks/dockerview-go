@@ -131,7 +131,7 @@
 body {
   background-color: var(--theme-bg);
   color: var(--theme-text);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -201,6 +201,32 @@ body::after {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 24px;
+  padding: 0 24px;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 4px;
+  }
+
+  .tilt-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
 }
 
 /* 3D card tilt & mouse follow radial gradient */
@@ -297,14 +323,16 @@ body::after {
   background: var(--theme-surface-1);
   border: 1px solid var(--theme-border-subtle);
   color: var(--theme-text-dim);
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

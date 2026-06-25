@@ -31,10 +31,10 @@ export function Header({
       <div className="flex items-center gap-3">
         <img src={`${basePath}logo.svg`} className="w-7 h-7 rounded-lg object-contain shadow-md" alt="DockerView Logo" />
         <div className="flex flex-col justify-start">
-          <h1 className="text-[13px] font-extrabold m-0 leading-tight tracking-[1.5px] uppercase text-text">
+          <h1 className="text-[13px] font-extrabold m-0 leading-tight tracking-[1.5px] text-text">
             {t('header.title')} <span className="text-accent-cyan">{t('header.subtitle')}</span>
           </h1>
-          <div className="flex items-center gap-1 mt-0.5 text-[9px] font-bold text-accent-cyan tracking-wider">
+          <div className="flex items-center gap-1 mt-0.5 text-[9px] font-bold text-accent-cyan tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan live-pulse" />
             <span>{t('header.liveTelemetry')}</span>
           </div>
@@ -45,7 +45,7 @@ export function Header({
       <div className="flex gap-1.5 bg-surface-1 border border-border-subtle p-0.5 rounded-xl">
         <button
           onClick={() => setFilterKey('all')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wider rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg transition-all ${
             filterKey === 'all' ? 'bg-surface-3 border border-surface-5 text-text' : 'text-text-dim border border-transparent hover:text-text'
           }`}
         >
@@ -53,7 +53,7 @@ export function Header({
         </button>
         <button
           onClick={() => setFilterKey('running')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wider rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg transition-all ${
             filterKey === 'running' ? 'bg-surface-3 border border-surface-5 text-text' : 'text-text-dim border border-transparent hover:text-text'
           }`}
         >
@@ -61,7 +61,7 @@ export function Header({
         </button>
         <button
           onClick={() => setFilterKey('stopped')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wider rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg transition-all ${
             filterKey === 'stopped' ? 'bg-surface-3 border border-surface-5 text-text' : 'text-text-dim border border-transparent hover:text-text'
           }`}
         >
@@ -82,7 +82,7 @@ export function Header({
       </div>
 
       {/* Sorting selectors */}
-      <div className="flex items-center gap-3 text-[10px] font-bold tracking-wider text-text-dim">
+      <div className="flex items-center gap-3 text-[10px] font-bold tracking-wide text-text-dim">
         {t('header.sortBy')}
         <div className="flex bg-surface-1 border border-border-subtle p-0.5 rounded-lg">
           <button
@@ -109,7 +109,7 @@ export function Header({
       {/* Language Switcher */}
       <button
         onClick={toggleLanguage}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wider rounded-lg bg-surface-1 hover:bg-surface-2 border border-border-subtle hover:border-border-default text-text-dim hover:text-text transition-all cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-wide rounded-lg bg-surface-1 hover:bg-surface-2 border border-border-subtle hover:border-border-default text-text-dim hover:text-text transition-all cursor-pointer"
         title={language === 'en' ? '切换到中文' : 'Switch to English'}
       >
         <Languages className="w-3.5 h-3.5" />

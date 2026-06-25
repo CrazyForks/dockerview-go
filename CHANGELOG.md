@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Port Duplication Display**: Added deduplication logic for running container port mappings fetched via Docker API `ContainerList`, which could return duplicate port entries for the same binding. Now uses a `deduplicatePorts()` helper to ensure each port mapping (PrivatePort + PublicPort + Type) appears only once in the dashboard.
 
+- **Chinese Text Layout**: Fixed formatting issues when using Chinese language. Replaced `uppercase` CSS class (which doesn't work with CJK characters) with `tracking-wide`, adjusted letter-spacing from `tracking-wider` to `tracking-wide` for better CJK rendering, increased label widths from 72px to 80px to accommodate wider Chinese characters, and added Chinese font support (PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC) to the font stack.
+
 ## [0.1.15] - 2026-06-25
 
 ### Added

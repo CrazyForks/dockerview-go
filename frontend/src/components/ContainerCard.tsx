@@ -99,7 +99,7 @@ export function ContainerCard({ container, history, onOp, onLogs, onExec, search
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
             {container.healthscore !== undefined && container.healthstatus && (
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-extrabold text-[11px] uppercase tracking-wider ${
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-extrabold text-[11px] tracking-wide ${
                 container.healthstatus === 'healthy'
                   ? 'bg-success/10 text-success border-success/20'
                   : container.healthstatus === 'warning'
@@ -114,7 +114,7 @@ export function ContainerCard({ container, history, onOp, onLogs, onExec, search
                 </span>
               </div>
             )}
-            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border text-center uppercase tracking-wider ${
+            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border text-center tracking-wide ${
               isUp
                 ? 'bg-success/5 text-success border-success/15'
                 : 'bg-danger/5 text-danger border-danger/15'
@@ -128,8 +128,8 @@ export function ContainerCard({ container, history, onOp, onLogs, onExec, search
         <div className="flex flex-col gap-4 mb-6 z-10 relative">
           {/* CPU Row */}
           <div className="flex items-center gap-4">
-            <div className="flex flex-col w-[72px] shrink-0 text-left">
-              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.cpuLoad')}</span>
+            <div className="flex flex-col w-[80px] shrink-0 text-left">
+              <span className="text-[9px] font-bold text-text-dim tracking-wide">{t('container.cpuLoad')}</span>
               <span className="text-[13px] font-extrabold mt-0.5 tabular-nums text-text">{container.cpu}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
@@ -147,8 +147,8 @@ export function ContainerCard({ container, history, onOp, onLogs, onExec, search
 
           {/* Memory Row */}
           <div className="flex items-center gap-4">
-            <div className="flex flex-col w-[72px] shrink-0 text-left">
-              <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase">{t('container.ramUsage')}</span>
+            <div className="flex flex-col w-[80px] shrink-0 text-left">
+              <span className="text-[9px] font-bold text-text-dim tracking-wide">{t('container.ramUsage')}</span>
               <span className="text-[13px] font-extrabold mt-0.5 tabular-nums text-text">{container.memory}</span>
             </div>
             <div className="flex items-center grow gap-3.5">
@@ -168,7 +168,7 @@ export function ContainerCard({ container, history, onOp, onLogs, onExec, search
         {/* Port Mappings Visualizer */}
         {container.ports && container.ports.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-6 z-10 relative text-left">
-            <span className="text-[9px] font-bold text-text-dim tracking-wider uppercase w-full mb-1">
+            <span className="text-[9px] font-bold text-text-dim tracking-wide w-full mb-1">
               {t('container.ports')}
             </span>
             {container.ports.map((pm, idx) => {
